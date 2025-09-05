@@ -1,53 +1,103 @@
-from pathlib import Path
-from datetime import timedelta
+# --- topo do arquivo ---
 import os
+from pathlib import Path
+from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# DEV
+# Segurança e debug (em produção: defina SECRET_KEY via ambiente)
+SECRET_KEY = os.getenv("SECRET_KEY") or get_random_secret_key()
 DEBUG = True
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-secret')
-ALLOWED_HOSTS = ['*']  # em produção, troque por domínio(s)
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+
+# Idioma e tz
+LANGUAGE_CODE = "pt-br"
+TIME_ZONE = "America/Maceio"
+USE_I18N = True
+USE_TZ = True
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# --- DB toggle sqlite/sqlserver ---
+DB_BACKEND = os.getenv("DB_BACKEND", "sqlite").lower()
+if DB_BACKEND == "sqlserver":
+    DATABASES = {
+        "default": {
+            "ENGINE": "mssql",
+            "NAME": os.getenv("DB_NAME", "NomeDoBanco"),
+            "USER": os.getenv("DB_USER", "usuario_sql"),
+            "PASSWORD": os.getenv("DB_PASS", "senha"),
+            "HOST": os.getenv("DB_HOST", "localhost"),
+            "PORT": os.getenv("DB_PORT", "1433"),
+            "OPTIONS": {
+                "driver": os.getenv("DB_DRIVER", "ODBC Driver 17 for SQL Server"),
+                "extra_params": os.getenv("DB_EXTRA", "TrustServerCertificate=yes;"),
+            },
+        }
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 INSTALLED_APPS = [
     # Django core
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    'django.contrib.admin','django.contrib.auth','django.contrib.contenttypes',
+    'django.contrib.sessions','django.contrib.messages','django.contrib.staticfiles',
 
-    # 3rd-party
-    'rest_framework',
-    'corsheaders',
-    'drf_spectacular',
+    # Third-party
+    'rest_framework','django_filters','drf_spectacular','corsheaders',
 
     # Apps do projeto
     'core',
-    'customizacoes',
-    'users',
+    'users.apps.UsersConfig',                 # preferências e signals de usuário
+    'customizacoes.apps.CustomizacoesConfig', # signals das customizações
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',                 # pode ficar no topo
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',  # <- precisa vir ANTES do AuthenticationMiddleware
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',  # <- antes
+    'core.middleware.CurrentUserMiddleware',                    # <- depois
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'config.urls'
-WSGI_APPLICATION = 'config.wsgi.application'
+CORS_ALLOW_ALL_ORIGINS = True  # dev; restrinja em produção
+# CORS_ALLOW_CREDENTIALS = True  # habilite se precisar enviar cookies
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    # Padrão: fechado (exige autenticação)
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+}
+
+# Abrir tudo só em dev quando quiser testar sem login
+if os.getenv("DEV_OPEN_API", "1") == "1" and DEBUG:
+    REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = []
+    REST_FRAMEWORK["DEFAULT_PERMISSION_CLASSES"] = ["rest_framework.permissions.AllowAny"]
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "API - Gestão de Customizações RM",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],           # usamos templates dentro dos apps
-        'APP_DIRS': True,     # <— importante p/ admin e templates dos apps
+        'DIRS': [BASE_DIR / 'templates'],
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -59,54 +109,27 @@ TEMPLATES = [
     },
 ]
 
-# --------- BANCO (SQL Server) ---------
-DATABASES = {
-    'default': {
-        'ENGINE': 'mssql',
-        'NAME': os.getenv('DB_NAME', 'jotanunes'),
-        'USER': os.getenv('DB_USER', 'sa'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'SenhaMuitoForte'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '1433'),
-        'OPTIONS': {
-            'driver': os.getenv('ODBC_DRIVER', 'ODBC Driver 18 for SQL Server'),
-            'TrustServerCertificate': 'yes',
-        },
-    }
-}
+ROOT_URLCONF = 'config.urls'
+WSGI_APPLICATION = 'config.wsgi.application'
 
-LANGUAGE_CODE = 'pt-br'
-TIME_ZONE = 'America/Maceio'
-USE_I18N = True
-USE_TZ = True
+STATIC_URL = 'static/'
 
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'customizacoes' / 'static']
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# ========= E-mail (SMTP) =========
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "")            # ex.: smtp.gmail.com
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))    # 587(TLS) ou 465(SSL)
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "false").lower() == "true"
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "10"))
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "no-reply@localhost")
+SERVER_EMAIL = os.getenv("SERVER_EMAIL", DEFAULT_FROM_EMAIL)
 
-# --------- DRF / JWT / Swagger ---------
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
-}
+# Em dev, se não houver SMTP configurado, imprime no console
+if DEBUG and not EMAIL_HOST:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=4),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-}
-
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'Jota Nunes – API de Customizações',
-    'DESCRIPTION': 'Gestão de customizações TOTVS (alertas, histórico, dependências).',
-    'VERSION': '1.0.0',
-}
-
-# CORS (dev)
-CORS_ALLOW_ALL_ORIGINS = True
+# (Opcional) Perfis/hierarquia — você disse que ajusta depois:
+# PROFILE_RANKS = {"OPERADOR":0,"ANALISTA":1,"COORDENADOR":2,"GESTOR":3}
+# PROFILE_DEFAULT = "OPERADOR"
