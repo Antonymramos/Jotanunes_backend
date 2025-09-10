@@ -48,28 +48,50 @@ INSTALLED_APPS = [
     'django.contrib.sessions','django.contrib.messages','django.contrib.staticfiles',
 
     # Third-party
-    'rest_framework','django_filters','drf_spectacular','corsheaders',
+    'corsheaders','rest_framework','django_filters','drf_spectacular',
 
-    # Apps do projeto
+    # Seus apps
     'core',
-    'users.apps.UsersConfig',                 # preferências e signals de usuário
-    'customizacoes.apps.CustomizacoesConfig', # signals das customizações
+    'customizacoes.apps.CustomizacoesConfig',
+    'ai.apps.AiConfig',              # <= ADICIONE ESTA LINHA
 ]
 
+
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # <= só uma vez, aqui no topo
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',  # <- antes
-    'core.middleware.CurrentUserMiddleware',                    # <- depois
+    'core.middleware.CurrentUserMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
-CORS_ALLOW_ALL_ORIGINS = True  # dev; restrinja em produção
-# CORS_ALLOW_CREDENTIALS = True  # habilite se precisar enviar cookies
+# --- CORS/CSRF para dev com frontend em Vite (porta 5173) ---
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+
+]
+# Se você tinha CORS_ALLOW_ALL_ORIGINS = True, REMOVA/COMENTE.
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+]
+
+# Cookies em dev (http)
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+# Em DEV: para testar sem login
+# (se quiser fechado, comente esse bloco)
+# if os.getenv("DEV_OPEN_API", "1") == "1" and DEBUG:
+    # REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = []
+    # REST_FRAMEWORK["DEFAULT_PERMISSION_CLASSES"] = ["rest_framework.permissions.AllowAny"]
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",

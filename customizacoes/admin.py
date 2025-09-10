@@ -2,7 +2,9 @@ from django.contrib import admin
 from django.http import HttpResponse
 from io import BytesIO
 import csv
-
+from django.contrib import messages
+from ai.models import CustomizacaoEmbedding
+from ai.services import cosine
 from .models import Customizacao, Dependencia, Alteracao, Notificacao,Assinatura
 
 
@@ -114,6 +116,19 @@ class CustomizacaoAdmin(admin.ModelAdmin):
     actions = [export_customizacoes_csv, export_customizacoes_xlsx, export_customizacoes_pdf]
     actions_on_top = True,
     actions_on_bottom = True,
+def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        emb = getattr(obj, "embedding", None)
+        if emb and emb.vec:
+            similares = []
+            for e in CustomizacaoEmbedding.objects.exclude(customizacao=obj):
+                score = cosine(emb.vec, e.vec or [])
+                if score >= 0.85:
+                    similares.append((score, e.customizacao.nome))
+            if similares:
+                similares.sort(reverse=True)
+                top = ", ".join(f"{n} ({s:.2f})" for s, n in similares[:5])
+                messages.warning(request, f"Possíveis duplicatas/semelhantes: {top}")
 
 
 @admin.register(Dependencia)

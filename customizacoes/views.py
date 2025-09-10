@@ -4,12 +4,15 @@ from django.db.models import Q, Count
 from rest_framework import viewsets, mixins, decorators, response, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
-
+from rest_framework.decorators import action
 from .models import Customizacao, Dependencia, Alteracao, Notificacao, CustomizacaoTipo
 from .serializers import (
     CustomizacaoListSerializer, CustomizacaoDetailSerializer,
     DependenciaSerializer, AlteracaoSerializer, NotificacaoSerializer
 )
+
+from django.http import HttpResponse
+import json, time
 
 
 class CustomizacaoViewSet(viewsets.ModelViewSet):
@@ -17,11 +20,23 @@ class CustomizacaoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["tipo", "modulo", "status"]
-
+    @action(detail=False, methods=["get"], url_path="semantic-search", permission_classes=[AllowAny])
+    def semantic_search(self, request):
+        q = request.query_params.get("q", "").strip()
+        k = int(request.query_params.get("k", 10))
     def get_serializer_class(self):
         if self.action in ["list"]:
             return CustomizacaoListSerializer
         return CustomizacaoDetailSerializer
+    def get_permissions(self):
+        open_actions = {
+            "search", "advanced_search",
+            "export_csv", "export_xlsx", "export_pdf",
+            "dashboard", "semantic_search", "lint",
+        }
+        if getattr(self, "action", None) in open_actions:
+            return [AllowAny()]
+        return super().get_permissions()
 
     # -------- Busca simples (nome, descrição, conteúdo, módulo, identificador) --------
     @decorators.action(
@@ -332,10 +347,6 @@ class AlteracaoViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewset
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["acao", "customizacao"]
 
-
-from django.http import HttpResponse  # já está no topo do arquivo
-import json, time
-
 class NotificacaoViewSet(viewsets.ModelViewSet):
     serializer_class = NotificacaoSerializer
     permission_classes = [IsAuthenticated]
@@ -405,3 +416,39 @@ class NotificacaoViewSet(viewsets.ModelViewSet):
         resp["Cache-Control"] = "no-cache"
         resp["X-Accel-Buffering"] = "no"
         return resp
+@decorators.action(
+    detail=False, methods=["get"], url_path="semantic-search",
+    permission_classes=[AllowAny],
+)
+def semantic_search(self, request):
+    """Busca semântica por similaridade de embeddings (mockável)."""
+    from ai.models import CustomizacaoEmbedding
+    from ai.services import embed_text, cosine
+
+    q = (request.query_params.get("q") or "").strip()
+    k = int(request.query_params.get("k", 20))
+    if not q:
+        return response.Response({"detail": "param q obrigatório (?q=...)"}, status=400)
+
+    qvec = embed_text(q)
+    hits = []
+    for emb in CustomizacaoEmbedding.objects.select_related("customizacao"):
+        score = round(cosine(qvec, emb.vec or []), 4)
+        c = emb.customizacao
+        hits.append({
+            "id": str(c.pk), "score": score,
+            "nome": c.nome, "tipo": c.tipo, "modulo": c.modulo,
+            "status": c.status, "identificador_erp": c.identificador_erp,
+        })
+    hits.sort(key=lambda x: x["score"], reverse=True)
+    return response.Response({"results": hits[:k]})
+
+@decorators.action(
+    detail=True, methods=["post"], url_path="lint",
+)
+def lint(self, request, pk=None):
+    """Linter simples de SQL/consulta para a customização alvo."""
+    from ai.sql_lint import lint_sql
+    obj = self.get_object()
+    issues = lint_sql(obj.conteudo or "")
+    return response.Response({"issues": issues, "ok": len(issues) == 0})

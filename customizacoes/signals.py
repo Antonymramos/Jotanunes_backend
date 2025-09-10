@@ -8,6 +8,8 @@ from django.db.models.signals import pre_save, post_save, post_delete, pre_delet
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.contrib.auth import get_user_model
+from ai.models import CustomizacaoEmbedding
+from ai.services import embed_text
 
 from .models import (
     Customizacao, Dependencia,
@@ -181,3 +183,20 @@ def deliver_notification(sender, instance, created, **kwargs):
     if not created or instance.destinatario_id is None:
         return
     transaction.on_commit(lambda: dispatch_notification(instance))
+@receiver(post_save, sender=Customizacao)
+def _update_customizacao_embedding(sender, instance: Customizacao, created, **kwargs):
+    try:
+        blob = "\n".join(filter(None, [
+            instance.nome,
+            instance.modulo,
+            instance.identificador_erp,
+            instance.descricao_tecnica,
+            instance.conteudo,
+        ]))
+        vec = embed_text(blob)
+        CustomizacaoEmbedding.objects.update_or_create(
+            customizacao=instance, defaults={"vec": vec}
+        )
+    except Exception as e:
+        # não falha o fluxo de save; só loga
+        print("embedding error:", e)    
