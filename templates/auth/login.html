@@ -1,0 +1,39 @@
+
+{% block title %}Login | Sistema de Alerta Jotanunes{% endblock %}
+{% block content %}
+{% load static %}
+<style>
+    body {
+        background: #f3f3f3 url("{% static 'img/login.png' %}") repeat;
+    }
+    .login-box {
+        width: 400px;
+        background-color: #fff;
+        padding: 30px;
+        margin: 80px auto;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+    .login-box h3 {
+        text-align: center;
+        color: #d40000;
+        margin-bottom: 25px;
+    }
+</style>
+
+<div class="login-box">
+    <h3>Sistema de Alerta<br>Jotanunes</h3>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="username">Usuário</label>
+            <input type="text" name="username" class="form-control" required autofocus>
+        </div>
+        <div class="mb-3">
+            <label for="password">Senha</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-danger w-100">Entrar</button>
+    </form>
+</div>
+{% endblock %}

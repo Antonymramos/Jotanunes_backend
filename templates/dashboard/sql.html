@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Dependências SQL | Jotanunes{% endblock %}
+{% block content %}
+<h2>Dependências - SQL</h2>
+<form class="mt-4">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="query" class="form-label">Query SQL</label>
+        <textarea class="form-control bg-dark text-light" name="query" rows="8">{{ query }}</textarea>
+    </div>
+    <button class="btn btn-danger">Executar</button>
+</form>
+{% endblock %}

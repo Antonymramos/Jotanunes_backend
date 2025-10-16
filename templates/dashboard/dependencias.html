@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Dependências | Jotanunes{% endblock %}
+{% block content %}
+<h2>Dependências</h2>
+<div class="d-flex justify-content-around mt-4">
+    <a href="{% url 'sql' %}" class="btn btn-danger btn-lg p-4">SQL</a>
+    <a href="{% url 'formulas' %}" class="btn btn-danger btn-lg p-4">Fórmulas</a>
+    <a href="{% url 'tabelas' %}" class="btn btn-danger btn-lg p-4">Tabelas</a>
+</div>
+{% endblock %}

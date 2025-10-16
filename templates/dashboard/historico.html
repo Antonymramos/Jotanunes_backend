@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Histórico de Alterações | Jotanunes{% endblock %}
+{% block content %}
+<h2>Histórico de Alterações</h2>
+<table class="table table-dark table-striped mt-3">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Descrição</th>
+            <th>Data</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in historico %}
+        <tr>
+            <td>{{ item.id }}</td>
+            <td>{{ item.descricao }}</td>
+            <td>{{ item.data|date:"d/m/Y" }}</td>
+            <td>{{ item.status }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

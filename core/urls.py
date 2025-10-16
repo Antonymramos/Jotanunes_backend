@@ -1,12 +1,15 @@
-from django.urls import path, include
-from core.views_auth import csrf_view, login_view, logout_view, whoami_view, me_view
+# core/urls.py
+from django.urls import path
+from . import views
 
 urlpatterns = [
-    # AUTH
-    path("auth/csrf/", csrf_view, name="auth-csrf"),
-    path("auth/login/", login_view, name="auth-login"),
-    path("auth/logout/", logout_view, name="auth-logout"),
-    path("auth/whoami/", whoami_view, name="auth-whoami"),
-    path("auth/me/", me_view, name="auth-me"),  # alias p/ compat
-
+    path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('historico/', views.historico_view, name='historico'),
+    path('verificacao/', views.verificacao_view, name='verificacao'),
+    path('verificacao/<int:pk>/', views.verificacao_view, name='verificacao_pk'),
+    path('dependencias/', views.dependencias_view, name='dependencias'),
+    path('dependencias/sql/', views.sql_view, name='sql'),
+    path('dependencias/sql/<int:pk>/', views.sql_view, name='sql_pk'),
+    path('dependencias/formula/', views.formula_view, name='formula'),
+    path('dependencias/tabelas/', views.tabelas_view, name='tabelas'),
 ]

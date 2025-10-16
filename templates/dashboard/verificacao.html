@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Verificação de Alterações | Jotanunes{% endblock %}
+{% block content %}
+<h2>Verificação de Versões</h2>
+<div class="row mt-3">
+    <div class="col-md-6">
+        <h5>Versão Antiga</h5>
+        <pre class="bg-dark text-light p-3" style="height:400px;overflow:auto;">{{ versao_antiga }}</pre>
+    </div>
+    <div class="col-md-6">
+        <h5>Versão Nova</h5>
+        <pre class="bg-dark text-success p-3" style="height:400px;overflow:auto;">{{ versao_nova }}</pre>
+    </div>
+</div>
+{% endblock %}

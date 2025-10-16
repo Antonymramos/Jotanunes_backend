@@ -13,6 +13,8 @@ from .serializers import (
 
 from django.http import HttpResponse
 import json, time
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 
 
 class CustomizacaoViewSet(viewsets.ModelViewSet):
@@ -452,3 +454,10 @@ def lint(self, request, pk=None):
     obj = self.get_object()
     issues = lint_sql(obj.conteudo or "")
     return response.Response({"issues": issues, "ok": len(issues) == 0})
+@login_required(login_url="login")
+def carregar_dependencias(request):
+    data = {
+        "status": "ok",
+        "dependencias": ["django", "pandas", "numpy"]
+    }
+    return JsonResponse(data)

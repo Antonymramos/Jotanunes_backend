@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Dependências - Fórmulas | Jotanunes{% endblock %}
+{% block content %}
+<h2>Dependências - Fórmulas</h2>
+<p>Listagem e edição de fórmulas do sistema.</p>
+<table class="table table-dark table-striped mt-3">
+    <thead><tr><th>Nome</th><th>Expressão</th><th>Ação</th></tr></thead>
+    <tbody>
+        {% for formula in formulas %}
+        <tr>
+            <td>{{ formula.nome }}</td>
+            <td>{{ formula.expressao }}</td>
+            <td><a href="#" class="btn btn-danger btn-sm">Editar</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
