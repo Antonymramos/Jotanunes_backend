@@ -23,7 +23,7 @@ def dashboard_view(request):
 
 @login_required(login_url='login')
 def historico_view(request):
-    qs = Alteracao.objects.select_related('customizacao', 'ator').order_by('-created')
+    qs = Alteracao.objects.select_related('customizacao', 'ator').order_by('-created_at')
     paginator = Paginator(qs, 25)
     page = request.GET.get('page', 1)
     historico = paginator.get_page(page)
@@ -42,7 +42,8 @@ def verificacao_view(request, pk=None):
         obj = get_object_or_404(Customizacao, pk=pk)
         # Ex.: comparar conteudo atual com última alteração (se houver)
         versao_nova = obj.conteudo or ""
-        last_alt = Alteracao.objects.filter(customizacao=obj).order_by("-created").first()
+        last_alt = Alteracao.objects.filter(customizacao=obj).order_by("-created_at").first()
+
         versao_antiga = last_alt.campos_alterados.get("conteudo") if last_alt and isinstance(last_alt.campos_alterados, dict) else ""
     return render(request, "dashboard/verificacao.html", {
         "versao_antiga": versao_antiga,
