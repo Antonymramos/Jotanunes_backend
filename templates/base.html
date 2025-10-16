@@ -69,12 +69,6 @@
         <a href="{% url 'dependencias' %}" class="{% if active_page == 'dependencias' %}active{% endif %}">Dependências</a>
     </div>
 
-    <div class="content">
-        <div class="topbar">
-            <div>Olá, {{ user.username }}</div>
-            <a href="{% url 'logout' %}" class="btn btn-logout">Sair</a>
-        </div>
-
         {% block content %}{% endblock %}
     </div>
 </body>

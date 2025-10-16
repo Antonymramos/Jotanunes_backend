@@ -9,7 +9,7 @@ def dashboard_view(request):
     # Resumo para cards do painel
     total_customizacoes = Customizacao.objects.count()
     alteracoes_pendentes = Alteracao.objects.filter().count()
-    dependencias_ativas = Dependencia.objects.filter(ativo=True).count()
+    dependencias_ativas = Dependencia.objects.filter(is_active=True).count()
     novas_notificacoes = Notificacao.objects.filter(lida=False, destinatario=request.user).count()
     context = {
         "total_alertas": total_customizacoes,

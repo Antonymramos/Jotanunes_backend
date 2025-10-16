@@ -1,39 +1,111 @@
-
-{% block title %}Login | Sistema de Alerta Jotanunes{% endblock %}
 {% block content %}
 {% load static %}
+<!-- Incluindo Bootstrap CDN para estilização e responsividade -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Incluindo Bootstrap Icons para ícones -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
 <style>
     body {
-        background: #f3f3f3 url("{% static 'img/login.png' %}") repeat;
+        background: #f3f3f3 url("{% static 'img/login.png' %}") no-repeat center center fixed;
+        background-size: cover;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
     }
     .login-box {
-        width: 400px;
-        background-color: #fff;
-        padding: 30px;
-        margin: 80px auto;
-        border-radius: 10px;
-        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        width: 100%;
+        max-width: 400px;
+        background: linear-gradient(135deg, #ffffff, #f8f9fa); /* Gradiente suave para um visual agradável */
+        padding: 0 2rem 2rem 2rem; /* Ajuste no padding para separar o header */
+        border-radius: 15px; /* Bordas mais arredondadas */
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Sombra sutil e moderna */
+        transition: transform 0.3s ease, box-shadow 0.3s ease; /* Animação suave ao hover */
+        animation: fadeIn 1s ease-in-out; /* Animação de entrada */
     }
-    .login-box h3 {
+    .login-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+    }
+    .login-header {
+        background-color: #d40000;
+        color: #ffffff;
         text-align: center;
-        color: #d40000;
-        margin-bottom: 25px;
+        padding: 1rem;
+        margin: -0  -2rem 1.5rem -2rem; /* Expande para as bordas do card */
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+        font-weight: 600;
+        font-size: 1.5rem;
+        animation: slideInDown 0.5s ease; /* Animação para o header */
+    }
+    .form-label {
+        font-weight: 500;
+        color: #333;
+    }
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .form-control:focus {
+        border-color: #d40000;
+        box-shadow: 0 0 8px rgba(212, 0, 0, 0.2);
+    }
+    .btn-danger {
+        border-radius: 8px;
+        padding: 0.75rem;
+        font-weight: 500;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    .btn-danger:hover {
+        background-color: #b30000;
+        transform: scale(1.02);
+    }
+    .input-group-text {
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+        transition: background-color 0.3s ease;
+    }
+    .input-group:hover .input-group-text {
+        background-color: #e9ecef;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideInDown {
+        from { transform: translateY(-20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    @media (max-width: 576px) {
+        .login-box {
+            max-width: 90%;
+            padding: 0 1.5rem 1.5rem 1.5rem;
+            margin: 1rem;
+        }
+        .login-header {
+            font-size: 1.25rem;
+            padding: 0.75rem;
+            margin: 0 -1.5rem 1rem -1.5rem;
+        }
     }
 </style>
 
 <div class="login-box">
-    <h3>Sistema de Alerta<br>Jotanunes</h3>
+    <div class="login-header">Sistema de Alerta<br>Jotanunes</div>
     <form method="POST">
         {% csrf_token %}
-        <div class="mb-3">
-            <label for="username">Usuário</label>
-            <input type="text" name="username" class="form-control" required autofocus>
+        <div class="mb-3 input-group">
+            <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+            <input type="text" name="username" id="username" class="form-control" placeholder="Usuário" required autofocus>
         </div>
-        <div class="mb-3">
-            <label for="password">Senha</label>
-            <input type="password" name="password" class="form-control" required>
+        <div class="mb-3 input-group">
+            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+            <input type="password" name="password" id="password" class="form-control" placeholder="Senha" required>
         </div>
-        <button type="submit" class="btn btn-danger w-100">Entrar</button>
+        <button type="submit" class="btn btn-danger w-100">Entrar <i class="bi bi-arrow-right"></i></button>
     </form>
 </div>
 {% endblock %}
