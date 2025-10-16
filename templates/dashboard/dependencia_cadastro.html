@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% block title %}Cadastrar Dependência | Jotanunes{% endblock %}
+{% block content %}
+<!-- Incluindo Bootstrap Icons para ícones -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+    .cadastro-container {
+        background: #1e1e1e;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        padding: 1.7rem;
+        animation: fadeIn 1s ease-in-out;
+        max-width: 950px;
+        margin: 0 auto;
+        width: 95%;
+    }
+    .cadastro-container h2 {
+        color: #ff4444;
+        margin-bottom: 1.2rem;
+        text-align: center;
+        font-size: 1.8rem;
+        font-weight: 600;
+    }
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+    .form-control, .form-select {
+        background-color: #fff;
+        color: #000;
+        border: 1px solid #3a3a3a;
+        border-radius: 6px;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        width: 100%;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #ff6666;
+        box-shadow: 0 0 6px rgba(255, 102, 102, 0.3);
+    }
+    .btn-danger {
+        background: linear-gradient(135deg, #ff4444, #cc0000);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 0.6rem 1.2rem;
+        font-weight: 500;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 100px;
+    }
+    .btn-danger:hover {
+        background: linear-gradient(135deg, #cc0000, #990000);
+        transform: scale(1.05);
+    }
+    .btn-danger i {
+        margin-left: 0.4rem;
+        transition: transform 0.3s ease;
+    }
+    .btn-danger:hover i {
+        transform: rotate(360deg);
+    }
+    .impact-table {
+        background: #2a2a2a;
+        border-radius: 8px;
+        overflow: hidden;
+        width: 100%;
+        color: #e0e0e0;
+        margin-top: 1.5rem;
+    }
+    .impact-table th, .impact-table td {
+        vertical-align: middle;
+        padding: 0.8rem;
+        text-align: center;
+    }
+    .impact-table th {
+        background: linear-gradient(135deg, #ff4444, #cc0000);
+        color: #fff;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .impact-table-hover tbody tr {
+        transition: background-color 0.3s ease;
+    }
+    .impact-table-hover tbody tr:hover {
+        background-color: #333333;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .impact-icon {
+        font-size: 1.1rem;
+        color: #ff4444;
+        transition: transform 0.3s ease;
+    }
+    .impact-table-hover tbody tr:hover .impact-icon {
+        transform: rotate(360deg);
+    }
+    .importancia {
+        margin-top: 1rem;
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        display: inline-block;
+    }
+    .importancia.alta { background-color: #ff4444; color: #fff; }
+    .importancia.media { background-color: #ffcc00; color: #000; }
+    .importancia.baixa { background-color: #00cc00; color: #fff; }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 992px) {
+        .cadastro-container {
+            padding: 1.2rem;
+            width: 95%;
+        }
+        .form-group {
+            flex-direction: column;
+        }
+        .form-control, .form-select {
+            min-width: 100%;
+        }
+        .btn-danger {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+    }
+    @media (max-width: 576px) {
+        .cadastro-container h2 {
+            font-size: 1.5rem;
+        }
+        .impact-table {
+            font-size: 0.85rem;
+        }
+        .importancia {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<div class="cadastro-container">
+    <h2>Cadastrar Dependência</h2>
+    <form method="POST" class="row g-2">
+        {% csrf_token %}
+        <div class="form-group col-md-6">
+            <label for="visual" class="form-label">Tabela Visual</label>
+            <select class="form-select" id="visual" name="visual" required>
+                <option value="">Selecione uma tabela visual</option>
+                {% for custom in customizacoes %}
+                    {% if custom.tipo == 'FORMULA' %}
+                        <option value="{{ custom.id }}">{{ custom.nome }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group col-md-6">
+            <label for="sql" class="form-label">SQL</label>
+            <select class="form-select" id="sql" name="sql" required>
+                <option value="">Selecione um SQL</option>
+                {% for custom in customizacoes %}
+                    {% if custom.tipo == 'SQL' %}
+                        <option value="{{ custom.id }}">{{ custom.nome }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group col-md-6">
+            <label for="reporter" class="form-label">Repórter</label>
+            <select class="form-select" id="reporter" name="reporter" required>
+                <option value="">Selecione um repórter</option>
+                {% for custom in customizacoes %}
+                    {% if custom.tipo == 'RELATORIO' %}
+                        <option value="{{ custom.id }}">{{ custom.nome }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group col-md-6">
+            <label for="variaveis" class="form-label">Variáveis Impactadas</label>
+            <input type="text" class="form-control" id="variaveis" name="variaveis" placeholder="Ex.: pessoa, trabalhador" required>
+        </div>
+        <div class="form-group col-md-12">
+            <label for="status" class="form-label">Status</label>
+            <select class="form-select" id="status" name="status" required>
+                <option value="ATIVA">Ativa</option>
+                <option value="EM_REVISAO">Em Revisão</option>
+                <option value="OBSOLETA">Obsoleta</option>
+            </select>
+        </div>
+        <div class="form-group col-md-12 text-center">
+            <button type="submit" class="btn btn-danger"><i class="bi bi-save"></i> Salvar</button>
+        </div>
+    </form>
+
+    <!-- Campo de Importância -->
+    <div class="importancia {{ importancia|default:'baixa' }}">
+        Importância: {{ importancia|default:'Baixa' }}
+    </div>
+
+    <h3 class="mt-4 text-center" style="color: #ff4444;">Impactos Potenciais</h3>
+    <table class="impact-table impact-table-hover mt-3">
+        <thead>
+            <tr>
+                <th>Dependência Afetada</th>
+                <th>Variável</th>
+                <th>Impacto Possível</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for impacto in impactos %}
+                <tr>
+                    <td>{{ impacto.dependencia }}</td>
+                    <td>{{ impacto.variavel }}</td>
+                    <td>{{ impacto.descricao }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center">Nenhum impacto identificado.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

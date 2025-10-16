@@ -79,8 +79,8 @@
     <div class="sidebar">
         <img src="{% static 'img/logo Branca.png' %}" alt="Logo Jotanunes" class="sidebar-logo">
         <a href="{% url 'dashboard' %}" class="{% if active_page == 'dashboard' %}active{% endif %}"><i class="bi bi-speedometer2"></i> Painel de Gestão</a>
-        <a href="{% url 'historico' %}" class="{% if active_page == 'historico' %}active{% endif %}"><i class="bi bi-clock-history"></i> Histórico de Alterações</a>
         <a href="{% url 'dependencias' %}" class="{% if active_page == 'dependencias' %}active{% endif %}"><i class="bi bi-diagram-3"></i> Dependências</a>
+        <a href="{% url 'historico' %}" class="{% if active_page == 'historico' %}active{% endif %}"><i class="bi bi-clock-history"></i> Histórico de Alterações</a>
     </div>
     <div class="content">
         {% block content %}{% endblock %}

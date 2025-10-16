@@ -1,10 +1,109 @@
 {% extends 'base.html' %}
 {% block title %}Dependências | Jotanunes{% endblock %}
 {% block content %}
-<h2>Dependências</h2>
-<div class="d-flex justify-content-around mt-4">
-    <a href="{% url 'sql' %}" class="btn btn-danger btn-lg p-4">SQL</a>
-    <a href="{% url 'formulas' %}" class="btn btn-danger btn-lg p-4">Fórmulas</a>
-    <a href="{% url 'tabelas' %}" class="btn btn-danger btn-lg p-4">Tabelas</a>
+<!-- Incluindo Bootstrap Icons para ícones -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+    .dep-card {
+        background: linear-gradient(135deg, #d40000, #b30000);
+        color: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        animation: fadeIn 1s ease-in-out;
+        padding: 2rem;
+        text-align: center;
+        height: 100%;
+    }
+    .dep-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 6px 20px rgba(212, 0, 0, 0.3);
+    }
+    .dep-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        transition: transform 0.3s ease, color 0.3s ease;
+        animation: bounceIn 0.5s ease;
+    }
+    .dep-card:hover .dep-icon {
+        transform: scale(1.2) rotate(15deg);
+        color: #ffd700;
+    }
+    .dep-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    .btn-cadastro {
+        background: linear-gradient(135deg, #d40000, #b30000);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 1rem 2rem;
+        font-weight: 600;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+        display: block;
+        margin: 2rem auto;
+        width: 300px;
+        text-align: center;
+    }
+    .btn-cadastro:hover {
+        background: linear-gradient(135deg, #ff6666, #d40000);
+        transform: scale(1.05);
+        color: #fff;
+        text-decoration: none;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bounceIn {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    @media (max-width: 768px) {
+        .dep-card {
+            margin-bottom: 1.5rem;
+        }
+        .btn-cadastro {
+            width: 100%;
+            max-width: 300px;
+        }
+    }
+</style>
+
+<h2 class="text-center mb-4">Dependências</h2>
+
+<!-- Botão de Cadastro Centralizado -->
+<a href="{% url 'dependencia_cadastro' %}" class="btn-cadastro">
+    <i class="bi bi-plus-circle-fill"></i> Cadastrar Nova Dependência
+</a>
+
+<div class="row mt-4">
+    <div class="col-md-4 mb-3">
+        <a href="{% url 'sql' %}" class="text-decoration-none">
+            <div class="dep-card">
+                <i class="bi bi-database-fill-gear dep-icon"></i>
+                <p class="dep-title">SQL</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 mb-3">
+        <a href="{% url 'formulas' %}" class="text-decoration-none">
+            <div class="dep-card">
+                <i class="bi bi-calculator-fill dep-icon"></i>
+                <p class="dep-title">Fórmulas</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 mb-3">
+        <a href="{% url 'tabelas' %}" class="text-decoration-none">
+            <div class="dep-card">
+                <i class="bi bi-table dep-icon"></i>
+                <p class="dep-title">Tabelas</p>
+            </div>
+        </a>
+    </div>
 </div>
 {% endblock %}
