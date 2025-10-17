@@ -199,28 +199,28 @@
         <div class="col-12 col-sm-6 col-md-3">
             <div class="stat-card">
                 <i class="bi bi-gear-fill stat-icon"></i>
-                <h1 class="stat-number">10</h1>
+                <h1 class="stat-number">{{ total_alertas }}</h1>
                 <p class="stat-title">Customizações Ativas</p>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-md-3">
             <div class="stat-card">
                 <i class="bi bi-search stat-icon"></i>
-                <h1 class="stat-number">6</h1>
+                <h1 class="stat-number">{{ alteracoes }}</h1>
                 <p class="stat-title">Alterações em Análise</p>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-md-3">
             <div class="stat-card">
                 <i class="bi bi-link-45deg stat-icon"></i>
-                <h1 class="stat-number">5</h1>
+                <h1 class="stat-number">{{ em_atencao }}</h1>
                 <p class="stat-title">Dependências Ativas</p>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-md-3">
             <div class="stat-card">
                 <i class="bi bi-bell-fill stat-icon"></i>
-                <h1 class="stat-number">8</h1>
+                <h1 class="stat-number">{{ novas_notificacoes }}</h1>
                 <p class="stat-title">Novas Notificações</p>
             </div>
         </div>
@@ -230,26 +230,25 @@
     <div class="activity-card">
         <h4>Últimas Atividades</h4>
         <ul class="activity-list">
+            {% for item in alteracoes_recentes %}
             <li class="activity-item">
-                <i class="bi bi-pencil-square activity-icon"></i>
-                <span class="activity-text">Nova customização adicionada por Usuário X</span>
-                <span class="activity-time">Há 2 horas</span>
+                {% if item.acao == 'CRIACAO' %}
+                    <i class="bi bi-pencil-square activity-icon"></i>
+                {% elif item.acao == 'ATUALIZACAO' %}
+                    <i class="bi bi-check-circle-fill activity-icon"></i>
+                {% elif item.acao == 'DEPENDENCIA' %}
+                    <i class="bi bi-exclamation-triangle-fill activity-icon"></i>
+                {% else %}
+                    <i class="bi bi-bell activity-icon"></i>
+                {% endif %}
+                <span class="activity-text">{{ item.acao }} na customização {{ item.customizacao.nome }} por {{ item.ator.username|default:"Sistema" }}</span>
+                <span class="activity-time">{{ item.ocorreu_em|date:"d/m/Y H:i" }}</span>
             </li>
+            {% empty %}
             <li class="activity-item">
-                <i class="bi bi-check-circle-fill activity-icon"></i>
-                <span class="activity-text">Alteração aprovada em análise</span>
-                <span class="activity-time">Há 5 horas</span>
+                <span class="activity-text">Nenhuma atividade recente.</span>
             </li>
-            <li class="activity-item">
-                <i class="bi bi-exclamation-triangle-fill activity-icon"></i>
-                <span class="activity-text">Dependência atualizada</span>
-                <span class="activity-time">Ontem</span>
-            </li>
-            <li class="activity-item">
-                <i class="bi bi-bell activity-icon"></i>
-                <span class="activity-text">Nova notificação recebida</span>
-                <span class="activity-time">Há 1 dia</span>
-            </li>
+            {% endfor %}
         </ul>
     </div>
 </div>

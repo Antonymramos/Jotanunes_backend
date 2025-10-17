@@ -20,33 +20,35 @@
                     {% for item in historico %}
                     <tr>
                         <td class="text-center">{{ item.id }}</td>
-                        <td>{{ item.descricao }}</td>
-                        <td class="text-center">{{ item.data|date:"d/m/Y" }}</td>
+                        <td>{{ item.acao }} na customização {{ item.customizacao.nome }} por {{ item.ator.username|default:"Sistema" }}</td>
+                        <td class="text-center">{{ item.ocorreu_em|date:"d/m/Y" }}</td>
                         <td class="text-center">
-                            {% if item.status == "Ativo" %}
-                                <span class="badge bg-success">{{ item.status }}</span>
-                            {% elif item.status == "Inativo" %}
-                                <span class="badge bg-secondary">{{ item.status }}</span>
+                            {% if item.customizacao.status == "ATIVA" %}
+                                <span class="badge bg-success">{{ item.customizacao.status }}</span>
+                            {% elif item.customizacao.status == "OBSOLETA" %}
+                                <span class="badge bg-secondary">{{ item.customizacao.status }}</span>
                             {% else %}
-                                <span class="badge bg-warning text-dark">{{ item.status }}</span>
+                                <span class="badge bg-warning text-dark">{{ item.customizacao.status }}</span>
                             {% endif %}
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2">
                                 <!-- Botão Visualizar -->
-                                <a href="" 
+                                <a href="{% url 'verificacao_pk' item.customizacao.id %}" 
                                    class="btn btn-sm btn-outline-info" 
                                    title="Visualizar">
                                     <i class="bi bi-eye"></i>
                                 </a>
 
-                                <!-- Botão Excluir -->
-                                <a href="" 
+                                <!-- Botão Excluir (comentado, assumindo read-only; descomente se necessário) -->
+                                <!--
+                                <a href="{% url 'delete_alteracao' item.id %}" 
                                    class="btn btn-sm btn-outline-danger" 
                                    title="Excluir"
                                    onclick="return confirm('Tem certeza que deseja excluir esta alteração?');">
                                     <i class="bi bi-trash"></i>
                                 </a>
+                                -->
                             </div>
                         </td>
                     </tr>
@@ -59,6 +61,25 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+
+        <!-- Paginação -->
+        <div class="pagination justify-content-center mt-3">
+            <span class="step-links">
+                {% if historico.has_previous %}
+                    <a href="?page=1" class="btn btn-outline-secondary">&laquo; Primeiro</a>
+                    <a href="?page={{ historico.previous_page_number }}" class="btn btn-outline-secondary">Anterior</a>
+                {% endif %}
+
+                <span class="current mx-2">
+                    Página {{ historico.number }} de {{ historico.paginator.num_pages }}
+                </span>
+
+                {% if historico.has_next %}
+                    <a href="?page={{ historico.next_page_number }}" class="btn btn-outline-secondary">Próximo</a>
+                    <a href="?page={{ historico.paginator.num_pages }}" class="btn btn-outline-secondary">Último &raquo;</a>
+                {% endif %}
+            </span>
         </div>
     </div>
 </div>

@@ -21,26 +21,36 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DB_BACKEND = os.getenv("DB_BACKEND", "sqlite").lower()
 if DB_BACKEND == "sqlserver":
     DATABASES = {
-        "default": {
-            "ENGINE": "mssql",
-            "NAME": os.getenv("DB_NAME", "NomeDoBanco"),
-            "USER": os.getenv("DB_USER", "usuario_sql"),
-            "PASSWORD": os.getenv("DB_PASS", "senha"),
-            "HOST": os.getenv("DB_HOST", "localhost"),
-            "PORT": os.getenv("DB_PORT", "1433"),
-            "OPTIONS": {
-                "driver": os.getenv("DB_DRIVER", "ODBC Driver 17 for SQL Server"),
-                "extra_params": os.getenv("DB_EXTRA", "TrustServerCertificate=yes;"),
-            },
-        }
-    }
+    'default': {
+        'ENGINE': 'mssql',
+        'NAME': 'AGenreciadorJn',
+        'USER': 'sa',
+        'PASSWORD': '@Senha123',  # Substitua pela senha real do SQL Server
+        'HOST': 'localhost',
+        'PORT': '1433',
+        'OPTIONS': {
+            'driver': 'ODBC Driver 17 for SQL Server',
+            'unicode_results': True,
+            'extra_params': 'Encrypt=no;TrustServerCertificate=yes',
+        },
+    },
+}
 else:
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
+    'default': {
+        'ENGINE': 'mssql',
+        'NAME': 'AGenreciadorJn',
+        'USER': 'sa',
+        'PASSWORD': '@Senha123',  # Substitua pela senha real do SQL Server
+        'HOST': 'localhost',
+        'PORT': '1433',
+        'OPTIONS': {
+            'driver': 'ODBC Driver 17 for SQL Server',
+            'unicode_results': True,
+            'extra_params': 'Encrypt=no;TrustServerCertificate=yes',
+        },
+    },
+}
 
 INSTALLED_APPS = [
     # Django core

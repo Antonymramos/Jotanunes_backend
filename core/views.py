@@ -1,29 +1,46 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from customizacoes.models import Customizacao, Dependencia, Alteracao, Notificacao
+from customizacoes.models import Customizacao, Alteracao, Dependencia, Notificacao
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
-from django.contrib import messages
-from django.db.models import Q
 
 @login_required(login_url='login')
 def dashboard_view(request):
-    # Resumo para cards do painel
-    total_customizacoes = Customizacao.objects.count()
-    alteracoes_pendentes = Alteracao.objects.filter().count()
-    dependencias_ativas = Dependencia.objects.filter(relacao="ATIVA").count()  # Ajuste conforme 'relacao'
-    novas_notificacoes = Notificacao.objects.filter(lida=False, destinatario=request.user).count()
+    total_customizacoes = Customizacao.get_queryset().count()
+    alteracoes_pendentes = 0
+    try:
+        alteracoes_pendentes = Alteracao.objects.count()
+    except ObjectDoesNotExist:
+        pass
+    dependencias_ativas = 0
+    try:
+        dependencias_ativas = Dependencia.objects.filter(relacao="ATIVA").count()
+    except ObjectDoesNotExist:
+        pass
+    novas_notificacoes = 0
+    try:
+        novas_notificacoes = Notificacao.objects.filter(lida=False, destinatario=request.user).count()
+    except ObjectDoesNotExist:
+        pass
+    alteracoes_recentes = []
+    try:
+        alteracoes_recentes = Alteracao.objects.select_related('ator').order_by('-ocorreu_em')[:4]  # Removido 'customizacao' temporariamente
+    except ObjectDoesNotExist:
+        pass
+
     context = {
         "total_alertas": total_customizacoes,
         "alteracoes": alteracoes_pendentes,
         "em_atencao": dependencias_ativas,
         "novas_notificacoes": novas_notificacoes,
+        "alteracoes_recentes": alteracoes_recentes,
         "active_page": "dashboard",
     }
     return render(request, "dashboard/index.html", context)
 
 @login_required(login_url='login')
 def historico_view(request):
-    qs = Alteracao.objects.select_related('customizacao', 'ator').order_by('-created_at')
+    qs = Alteracao.objects.select_related('ator').order_by('-ocorreu_em')  # Removido 'customizacao' temporariamente
     paginator = Paginator(qs, 25)
     page = request.GET.get('page', 1)
     historico = paginator.get_page(page)
@@ -31,14 +48,10 @@ def historico_view(request):
 
 @login_required(login_url='login')
 def verificacao_view(request, pk=None):
-    """
-    Se pk for informado, carregar a customização alvo da verificação.
-    Caso contrário, renderizar a tela em branco para seleção.
-    """
     versao_antiga = ""
     versao_nova = ""
     if pk:
-        obj = get_object_or_404(Customizacao, pk=pk)
+        obj = get_object_or_404(Customizacao.get_queryset(), pk=pk)
         versao_nova = obj.conteudo or ""
         last_alt = Alteracao.objects.filter(customizacao=obj).order_by("-created_at").first()
         versao_antiga = last_alt.campos_alterados.get("conteudo") if last_alt and isinstance(last_alt.campos_alterados, dict) else ""
@@ -50,19 +63,15 @@ def verificacao_view(request, pk=None):
 
 @login_required(login_url='login')
 def dependencias_view(request):
-    # Exibe botões para SQL, Fórmulas e Tabelas
     return render(request, "dashboard/dependencias.html", {"active_page": "dependencias"})
 
 @login_required(login_url='login')
 def sql_view(request, pk=None):
-    """
-    Se pk fornecido, carrega a dependência SQL correspondente; caso contrário exibe lista.
-    """
     query = ""
     dependencias = Dependencia.objects.filter(relacao__icontains="SQL").order_by("-created_at")[:50]
     if pk:
         d = get_object_or_404(Dependencia, pk=pk)
-        query = d.observacao or ""  # Ajustado para 'observacao' pois 'conteudo' não existe
+        query = d.observacao or ""
     return render(request, "dashboard/sql.html", {
         "dependencias": dependencias,
         "query": query,
@@ -71,14 +80,12 @@ def sql_view(request, pk=None):
 
 @login_required(login_url='login')
 def formula_view(request):
-    # Lista fórmulas (tipo FORMULA)
-    formulas = Customizacao.objects.filter(tipo=Customizacao.FORMULA)
+    formulas = Customizacao.get_queryset(tipo=Customizacao.FORMULA)
     return render(request, "dashboard/formulas.html", {"formulas": formulas, "active_page": "dependencias"})
 
 @login_required(login_url='login')
 def tabelas_view(request):
-    # Exemplo: listar tabelas relacionadas (se houver modelo que armazene metadados)
-    tabelas = []  # caso exista modelo, trocar por query real
+    tabelas = []  # Ajustar se houver modelo de tabelas
     return render(request, "dashboard/tabelas.html", {"tabelas": tabelas, "active_page": "dependencias"})
 
 @login_required(login_url='login')
@@ -89,22 +96,15 @@ def dependencia_cadastro_view(request):
         destino_id = request.POST.get('destino')
         variaveis = request.POST.get('variaveis', '').split(',')
         status = request.POST.get('status')
-
-        # Verificar se as Customizacoes existem
-        origem = get_object_or_404(Customizacao, pk=origem_id)
-        destino = get_object_or_404(Customizacao, pk=destino_id)
-
-        # Determinar o campo específico com base no tipo
+        origem = get_object_or_404(Customizacao.get_queryset(), pk=origem_id)
+        destino = get_object_or_404(Customizacao.get_queryset(), pk=destino_id)
+        observacao = ''
         if tipo == 'SQL':
             observacao = request.POST.get('observacao')
         elif tipo == 'FORMULA':
             observacao = request.POST.get('expressao')
         elif tipo == 'TABELA':
             observacao = request.POST.get('estrutura')
-        else:
-            observacao = ''
-
-        # Salvar a nova dependência
         dependencia = Dependencia.objects.create(
             origem=origem,
             destino=destino,
@@ -113,9 +113,7 @@ def dependencia_cadastro_view(request):
         )
         messages.success(request, f"Dependência {tipo} cadastrada com sucesso!")
         return redirect('dependencia_cadastro')
-
-    # Obter todas as customizações para o formulário
-    customizacoes = Customizacao.objects.all()
+    customizacoes = Customizacao.get_queryset()
     impactos = []
     if request.method == "POST" and 'variaveis' in request.POST:
         for var in variaveis:
@@ -126,8 +124,6 @@ def dependencia_cadastro_view(request):
                     'variavel': 'trabalhador',
                     'descricao': 'Alteração em "pessoa" pode afetar "trabalhador"'
                 })
-            # Adicione mais regras conforme necessário
-
     return render(request, 'dashboard/dependencia_cadastro.html', {
         'customizacoes': customizacoes,
         'impactos': impactos,
