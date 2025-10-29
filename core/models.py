@@ -15,7 +15,6 @@ class BaseModel(TimeStampedModel):
         abstract = True
 
 class ActorMixin(models.Model):
-    # opcional: para logs/alterações
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, related_name="%(class)s_created",
         null=True, blank=True, on_delete=models.SET_NULL

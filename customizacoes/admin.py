@@ -1,33 +1,51 @@
+# customizacoes/admin.py (use exatamente este)
 from django.contrib import admin
-from .models import Customizacao, Dependencia, Assinatura, Alteracao, Notificacao
+from .models import (
+    Usuario, Notificacao, Observacao, Prioridade, CadastroDependencias,
+    CustomizacaoFV, CustomizacaoSQL, CustomizacaoReport
+)
 
-@admin.register(Customizacao)
-class CustomizacaoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'tipo', 'status', 'criado_no_erp_em', 'responsavel', 'codcoligada')  # Campos existentes
-    list_filter = ('tipo', 'status', 'criado_no_erp_em')  # Filtros baseados em campos existentes
-    search_fields = ('nome', 'descricao_tecnica', 'responsavel')  # Campos para busca
-    list_per_page = 25
-
-@admin.register(Dependencia)
-class DependenciaAdmin(admin.ModelAdmin):
-    list_display = ('origem', 'destino', 'relacao', 'observacao')
-    list_filter = ('relacao',)
-    search_fields = ('observacao',)
-
-@admin.register(Assinatura)
-class AssinaturaAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'escopo', 'modulo', 'customizacao', 'ativo')
-    list_filter = ('escopo', 'ativo')
-    search_fields = ('modulo',)
-
-@admin.register(Alteracao)
-class AlteracaoAdmin(admin.ModelAdmin):
-    list_display = ('customizacao', 'acao', 'ator', 'ocorreu_em', 'comentario')
-    list_filter = ('acao', 'ocorreu_em')
-    search_fields = ('comentario',)
+@admin.register(Usuario)
+class UsuarioAdmin(admin.ModelAdmin):
+    list_display = ('id_usuario', 'nome', 'email', 'cargo')
+    search_fields = ('nome', 'email')
 
 @admin.register(Notificacao)
 class NotificacaoAdmin(admin.ModelAdmin):
-    list_display = ('customizacao', 'tipo', 'mensagem', 'destinatario', 'origem', 'lida', 'criada_em')
-    list_filter = ('tipo', 'lida', 'criada_em')
-    search_fields = ('mensagem',)
+    list_display = ('id_notificacao', 'titulo', 'id_usuario', 'data_hora', 'lida')
+    list_filter = ('lida', 'data_hora')
+    search_fields = ('titulo',)
+    readonly_fields = ('data_hora',)
+
+@admin.register(CadastroDependencias)
+class CadastroDependenciasAdmin(admin.ModelAdmin):
+    list_display = ('id', 'fv_id', 'sql_id', 'report_id', 'criado_por', 'data_criacao')
+    list_filter = ('data_criacao',)
+    search_fields = ('id_aud_fv', 'id_aud_sql', 'id_aud_report')
+
+    def fv_id(self, obj): return f"FV:{obj.id_aud_fv}" if obj.id_aud_fv else "-"
+    fv_id.short_description = "FV"
+
+    def sql_id(self, obj): return f"SQL:{obj.id_aud_sql}" if obj.id_aud_sql else "-"
+    sql_id.short_description = "SQL"
+
+    def report_id(self, obj): return f"REP:{obj.id_aud_report}" if obj.id_aud_report else "-"
+    report_id.short_description = "Report"
+
+@admin.register(CustomizacaoFV)
+class CustomizacaoFVAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nome', 'tipo', 'status', 'ativo')
+    list_filter = ('tipo', 'status', 'ativo')
+    search_fields = ('nome', 'descricao_tecnica')
+
+@admin.register(CustomizacaoSQL)
+class CustomizacaoSQLAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nome', 'tipo', 'status', 'aplicacao')
+    list_filter = ('tipo', 'status')
+    search_fields = ('nome', 'sentenca')
+
+@admin.register(CustomizacaoReport)
+class CustomizacaoReportAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nome', 'tipo', 'status', 'codigo')
+    list_filter = ('tipo', 'status')
+    search_fields = ('nome', 'codigo')
