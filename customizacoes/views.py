@@ -1,3 +1,5 @@
+from argparse import Action
+import time
 from rest_framework import viewsets, mixins, decorators, response, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
@@ -33,7 +35,7 @@ class CustomizacaoViewSet(viewsets.ModelViewSet):
             return [AllowAny()]
         return super().get_permissions()
 
-    @action(detail=False, methods=["get"], url_path="search", permission_classes=[AllowAny])
+    @Action(detail=False, methods=["get"], url_path="search", permission_classes=[AllowAny])
     def search(self, request):
         q = request.query_params.get("q", "").strip()
         qs = self.get_queryset()
@@ -49,7 +51,7 @@ class CustomizacaoViewSet(viewsets.ModelViewSet):
         ser = CustomizacaoListSerializer(page or qs, many=True)
         return self.get_paginated_response(ser.data) if page is not None else response.Response(ser.data)
 
-    @action(detail=False, methods=["get"], url_path="advanced-search", permission_classes=[AllowAny])
+    @Action(detail=False, methods=["get"], url_path="advanced-search", permission_classes=[AllowAny])
     def advanced_search(self, request):
         q = request.query_params.get("q", "").strip()
         modulo = request.query_params.get("modulo", "").strip()
@@ -106,7 +108,7 @@ class CustomizacaoViewSet(viewsets.ModelViewSet):
             })
         return response.Response({"count": len(payload), "results": payload})
 
-    @action(detail=False, methods=["get"], url_path="export/csv", permission_classes=[AllowAny])
+    @Action(detail=False, methods=["get"], url_path="export/csv", permission_classes=[AllowAny])
     def export_csv(self, request):
         import csv, io
         qs = self.filter_queryset(self.get_queryset()).order_by("nome")
@@ -122,7 +124,7 @@ class CustomizacaoViewSet(viewsets.ModelViewSet):
         resp["Content-Disposition"] = 'attachment; filename="customizacoes.csv"'
         return resp
 
-    @action(detail=False, methods=["get"], url_path="export/xlsx", permission_classes=[AllowAny])
+    @Action(detail=False, methods=["get"], url_path="export/xlsx", permission_classes=[AllowAny])
     def export_xlsx(self, request):
         try:
             from openpyxl import Workbook
@@ -161,7 +163,7 @@ class CustomizacaoViewSet(viewsets.ModelViewSet):
         resp["Content-Disposition"] = 'attachment; filename="customizacoes.xlsx"'
         return resp
 
-    @action(detail=False, methods=["get"], url_path="export/pdf", permission_classes=[AllowAny])
+    @Action(detail=False, methods=["get"], url_path="export/pdf", permission_classes=[AllowAny])
     def export_pdf(self, request):
         try:
             from reportlab.lib.pagesizes import A4, landscape
@@ -207,7 +209,7 @@ class CustomizacaoViewSet(viewsets.ModelViewSet):
         resp["Content-Disposition"] = 'attachment; filename="customizacoes.pdf"'
         return resp
 
-    @action(detail=False, methods=["get"], url_path="dashboard", permission_classes=[AllowAny])
+    @Action(detail=False, methods=["get"], url_path="dashboard", permission_classes=[AllowAny])
     def dashboard(self, request):
         total = Customizacao.get_queryset().count()
         by_status = list(Customizacao.get_queryset().values("status").annotate(qtd=Count("id")).order_by("-qtd"))
@@ -238,7 +240,7 @@ class CustomizacaoViewSet(viewsets.ModelViewSet):
             "mais_referenciadas": mais_referenciadas,
         })
 
-    @action(detail=False, methods=["get"], url_path="semantic-search", permission_classes=[AllowAny])
+    @Action(detail=False, methods=["get"], url_path="semantic-search", permission_classes=[AllowAny])
     def semantic_search(self, request):
         from ai.models import CustomizacaoEmbedding
         from ai.services import embed_text, cosine
@@ -260,7 +262,7 @@ class CustomizacaoViewSet(viewsets.ModelViewSet):
         hits.sort(key=lambda x: x["score"], reverse=True)
         return response.Response({"results": hits[:k]})
 
-    @action(detail=True, methods=["post"], url_path="lint")
+    @Action(detail=True, methods=["post"], url_path="lint")
     def lint(self, request, pk=None):
         from ai.sql_lint import lint_sql
         obj = self.get_object()
@@ -308,24 +310,24 @@ class NotificacaoViewSet(viewsets.ModelViewSet):
             Q(destinatario=u) | Q(destinatario__isnull=True)
         ).order_by("-criada_em")
 
-    @action(detail=False, methods=["get"], url_path="unread")
+    @Action(detail=False, methods=["get"], url_path="unread")
     def unread(self, request):
         qs = self.get_queryset().filter(lida=False)[:200]
         return response.Response(self.get_serializer(qs, many=True).data)
 
-    @action(detail=True, methods=["post"], url_path="mark-read")
+    @Action(detail=True, methods=["post"], url_path="mark-read")
     def mark_read(self, request, pk=None):
         n = self.get_object()
         n.lida = True
         n.save(update_fields=["lida"])
         return response.Response({"ok": True})
 
-    @action(detail=False, methods=["post"], url_path="mark-all-read")
+    @Action(detail=False, methods=["post"], url_path="mark-all-read")
     def mark_all_read(self, request):
         count = self.get_queryset().filter(lida=False).update(lida=True)
         return response.Response({"updated": count})
 
-    @action(detail=False, methods=["get"], url_path="stream")
+    @Action(detail=False, methods=["get"], url_path="stream")
     def stream(self, request):
         if not request.user.is_authenticated:
             return HttpResponse(status=401)

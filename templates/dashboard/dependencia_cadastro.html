@@ -1,227 +1,390 @@
 {% extends 'base.html' %}
 {% block title %}Cadastrar Dependência | Jotanunes{% endblock %}
 {% block content %}
-<!-- Incluindo Bootstrap Icons para ícones -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
-    .cadastro-container {
-        background: #1e1e1e;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        padding: 1.7rem;
-        animation: fadeIn 1s ease-in-out;
-        max-width: 950px;
-        margin: 0 auto;
-        width: 95%;
+    :root {
+        --bg-dark: #121212;
+        --card-bg: #1e1e1e;
+        --primary: #d40000;
+        --primary-light: #ff3333;
+        --text: #e0e0e0;
+        --border: #333333;
+        --shadow: 0 8px 32px rgba(0,0,0,0.4);
+        --radius: 16px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .cadastro-container h2 {
-        color: #ff4444;
-        margin-bottom: 1.2rem;
-        text-align: center;
-        font-size: 1.8rem;
-        font-weight: 600;
-    }
-    .form-group {
-        margin-bottom: 1.2rem;
-    }
-    .form-control, .form-select {
-        background-color: #fff;
-        color: #000;
-        border: 1px solid #3a3a3a;
-        border-radius: 6px;
-        transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        width: 100%;
-    }
-    .form-control:focus, .form-select:focus {
-        border-color: #ff6666;
-        box-shadow: 0 0 6px rgba(255, 102, 102, 0.3);
-    }
-    .btn-danger {
-        background: linear-gradient(135deg, #ff4444, #cc0000);
-        color: #fff;
-        border: none;
-        border-radius: 6px;
-        padding: 0.6rem 1.2rem;
+
+    * { font-family: 'Inter', sans-serif; }
+    body { background: var(--bg-dark); color: var(--text); min-height: 100vh; }
+
+    .cadastro-wrapper { width: 100%; max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+    .cadastro-card { background: var(--card-bg); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); animation: floatIn 0.8s ease-out; }
+    .cadastro-header { background: linear-gradient(135deg, var(--primary), #b30000); padding: 2rem; text-align: center; }
+    .cadastro-title { font-size: 2rem; font-weight: 700; margin: 0; }
+    .cadastro-title i { font-size: 2.5rem; margin-right: 0.5rem; }
+    .cadastro-body { padding: 2.5rem; }
+    .form-group { margin-bottom: 1.5rem; }
+
+    .form-label {
         font-weight: 500;
-        transition: background-color 0.3s ease, transform 0.2s ease;
+        color: #ff6666;
+        margin-bottom: 0.4rem;
         display: flex;
         align-items: center;
-        justify-content: center;
-        min-width: 100px;
+        font-size: 0.85rem;
     }
-    .btn-danger:hover {
-        background: linear-gradient(135deg, #cc0000, #990000);
-        transform: scale(1.05);
-    }
-    .btn-danger i {
-        margin-left: 0.4rem;
-        transition: transform 0.3s ease;
-    }
-    .btn-danger:hover i {
-        transform: rotate(360deg);
-    }
-    .impact-table {
-        background: #2a2a2a;
-        border-radius: 8px;
-        overflow: hidden;
-        width: 100%;
-        color: #e0e0e0;
-        margin-top: 1.5rem;
-    }
-    .impact-table th, .impact-table td {
-        vertical-align: middle;
-        padding: 0.8rem;
-        text-align: center;
-    }
-    .impact-table th {
-        background: linear-gradient(135deg, #ff4444, #cc0000);
-        color: #fff;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .impact-table-hover tbody tr {
-        transition: background-color 0.3s ease;
-    }
-    .impact-table-hover tbody tr:hover {
-        background-color: #333333;
-        transform: translateY(-2px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-    .impact-icon {
-        font-size: 1.1rem;
-        color: #ff4444;
-        transition: transform 0.3s ease;
-    }
-    .impact-table-hover tbody tr:hover .impact-icon {
-        transform: rotate(360deg);
-    }
-    .importancia {
-        margin-top: 1rem;
-        text-align: center;
-        font-size: 1.2rem;
-        font-weight: 500;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        display: inline-block;
-    }
-    .importancia.alta { background-color: #ff4444; color: #fff; }
-    .importancia.media { background-color: #ffcc00; color: #000; }
-    .importancia.baixa { background-color: #00cc00; color: #fff; }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    @media (max-width: 992px) {
-        .cadastro-container {
-            padding: 1.2rem;
-            width: 95%;
-        }
-        .form-group {
-            flex-direction: column;
-        }
-        .form-control, .form-select {
-            min-width: 100%;
-        }
-        .btn-danger {
-            width: 100%;
-            margin-top: 0.5rem;
-        }
-    }
-    @media (max-width: 576px) {
-        .cadastro-container h2 {
-            font-size: 1.5rem;
-        }
-        .impact-table {
-            font-size: 0.85rem;
-        }
-        .importancia {
-            font-size: 1rem;
-        }
+
+    .form-label i { margin-right: 0.4rem; font-size: 1rem; }
+
+    .select-box { position: relative; background: white; border: 1px solid #ccc; border-radius: 10px; transition: var(--transition); }
+    .select-header { display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 1rem; cursor: text; min-height: 46px; background: white !important; }
+    .select-header input { border: none; outline: none; width: 100%; background: transparent; color: #000; font-size: 0.9rem; }
+    .select-header-icons { display: flex; align-items: center; gap: 0.5rem; }
+    .select-header-icons i { color: #000; font-size: 1rem; cursor: pointer; transition: transform 0.3s ease; }
+    .select-header-icons i:hover { color: var(--primary); }
+    .select-header.open i.bi-chevron-down { transform: rotate(180deg); }
+    .select-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; border-top: 1px solid #eee; background: white; border-radius: 0 0 10px 10px; position: absolute; width: 100%; z-index: 20; }
+    .select-body.open { max-height: 260px; }
+    .select-options { max-height: 240px; overflow-y: auto; }
+    .select-option { padding: 10px 14px; cursor: pointer; display: flex; align-items: center; color: #000; transition: var(--transition); }
+    .select-option:hover { background: #f8f8f8; }
+    .select-option.selected { background: var(--primary-light); color: white; }
+    .selected-items { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .selected-item { background: var(--primary); color: white; padding: 5px 10px; border-radius: 16px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
+    .selected-item .remove { cursor: pointer; font-weight: bold; }
+
+    .fluxo-container { display: flex; align-items: center; justify-content: center; margin: 2rem 0; }
+    .fluxo-linha { flex: 1; height: 3px; background: linear-gradient(90deg, transparent, var(--primary-light), transparent); }
+    .fluxo-seta { width: 50px; height: 50px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; margin: 0 1rem; box-shadow: 0 4px 15px rgba(212, 0, 0, 0.3); animation: pulse 2s infinite; }
+
+    .btn-cadastrar { background: linear-gradient(135deg, var(--primary-light), var(--primary)); color: white; border: none; border-radius: 50px; padding: 0.9rem 3rem; font-weight: 600; font-size: 1.1rem; box-shadow: 0 6px 20px rgba(212, 0, 0, 0.3); transition: var(--transition); min-width: 220px; }
+    .btn-cadastrar:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(212, 0, 0, 0.4); }
+
+    @keyframes floatIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+    @media (max-width: 768px) {
+        .cadastro-body { padding: 1.5rem; }
+        .fluxo-container { flex-direction: column; }
+        .fluxo-linha { width: 3px; height: 50px; margin: 1rem 0; }
+        .fluxo-seta { margin: 0; }
     }
 </style>
 
-<div class="cadastro-container">
-    <h2>Cadastrar Dependência</h2>
-    <form method="POST" class="row g-2">
-        {% csrf_token %}
-        <div class="form-group col-md-6">
-            <label for="visual" class="form-label">Tabela Visual</label>
-            <select class="form-select" id="visual" name="visual" required>
-                <option value="">Selecione uma tabela visual</option>
-                {% for custom in customizacoes %}
-                    {% if custom.tipo == 'FORMULA' %}
-                        <option value="{{ custom.id }}">{{ custom.nome }}</option>
-                    {% endif %}
-                {% endfor %}
-            </select>
+<div class="cadastro-wrapper">
+    <div class="cadastro-card">
+        <div class="cadastro-header">
+            <h1 class="cadastro-title">
+                <i class="bi bi-diagram-3-fill"></i> Cadastrar Dependência
+            </h1>
         </div>
-        <div class="form-group col-md-6">
-            <label for="sql" class="form-label">SQL</label>
-            <select class="form-select" id="sql" name="sql" required>
-                <option value="">Selecione um SQL</option>
-                {% for custom in customizacoes %}
-                    {% if custom.tipo == 'SQL' %}
-                        <option value="{{ custom.id }}">{{ custom.nome }}</option>
-                    {% endif %}
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group col-md-6">
-            <label for="reporter" class="form-label">Repórter</label>
-            <select class="form-select" id="reporter" name="reporter" required>
-                <option value="">Selecione um repórter</option>
-                {% for custom in customizacoes %}
-                    {% if custom.tipo == 'RELATORIO' %}
-                        <option value="{{ custom.id }}">{{ custom.nome }}</option>
-                    {% endif %}
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group col-md-6">
-            <label for="variaveis" class="form-label">Variáveis Impactadas</label>
-            <input type="text" class="form-control" id="variaveis" name="variaveis" placeholder="Ex.: pessoa, trabalhador" required>
-        </div>
-        <div class="form-group col-md-12">
-            <label for="status" class="form-label">Status</label>
-            <select class="form-select" id="status" name="status" required>
-                <option value="ATIVA">Ativa</option>
-                <option value="EM_REVISAO">Em Revisão</option>
-                <option value="OBSOLETA">Obsoleta</option>
-            </select>
-        </div>
-        <div class="form-group col-md-12 text-center">
-            <button type="submit" class="btn btn-danger"><i class="bi bi-save"></i> Salvar</button>
-        </div>
-    </form>
 
-    <!-- Campo de Importância -->
-    <div class="importancia {{ importancia|default:'baixa' }}">
-        Importância: {{ importancia|default:'Baixa' }}
+        <div class="cadastro-body">
+            <!-- AVISO DE SUCESSO -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <strong>{{ message }}</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- ALERTA VISUAL -->
+            {% if request.session.alerta_tipo %}
+                <div class="alert alert-{{ request.session.alerta_tipo }} alert-dismissible fade show" role="alert">
+                    <strong>{{ request.session.alerta_mensagem }}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endif %}
+
+            <form method="post" id="dependencia-form">
+                {% csrf_token %}
+                <div class="row g-4">
+                    <!-- ORIGEM -->
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-box-arrow-in-right"></i> Tabela de Origem
+                            </label>
+                            <select name="tabela_origem" id="tabela_origem" class="form-select" required>
+                                <option value="">Selecione a tabela de origem</option>
+                                <option value="sql">AUD_SQL</option>
+                                <option value="report">AUD_REPORT</option>
+                                <option value="fv">AUD_FV</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-list-check"></i> Registros de Origem
+                            </label>
+                            <div class="select-box">
+                                <div class="select-header" id="origem-header">
+                                    <input type="text" id="origem-input" placeholder="Clique para selecionar" autocomplete="off">
+                                    <div class="select-header-icons">
+                                        <i class="bi bi-chevron-down"></i>
+                                    </div>
+                                </div>
+                                <div class="select-body" id="origem-body">
+                                    <div class="select-options" id="origem-options"></div>
+                                </div>
+                            </div>
+                            <div class="selected-items" id="origem-selected"></div>
+                            <div id="origem-hidden"></div>
+                        </div>
+                    </div>
+
+                    <!-- FLUXO -->
+                    <div class="col-12">
+                        <div class="fluxo-container">
+                            <div class="fluxo-linha"></div>
+                            <div class="fluxo-seta"><i class="bi bi-arrow-right"></i></div>
+                            <div class="fluxo-linha"></div>
+                        </div>
+                    </div>
+
+                    <!-- DESTINO -->
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-box-arrow-in-left"></i> Tabela de Destino
+                            </label>
+                            <select name="tabela_destino" id="tabela_destino" class="form-select" required>
+                                <option value="">Selecione a tabela de destino</option>
+                                <option value="sql">AUD_SQL</option>
+                                <option value="report">AUD_REPORT</option>
+                                <option value="fv">AUD_FV</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-target"></i> Registros de Destino
+                            </label>
+                            <div class="select-box">
+                                <div class="select-header" id="destino-header">
+                                    <input type="text" id="destino-input" placeholder="Clique para selecionar" autocomplete="off">
+                                    <div class="select-header-icons">
+                                        <i class="bi bi-chevron-down"></i>
+                                    </div>
+                                </div>
+                                <div class="select-body" id="destino-body">
+                                    <div class="select-options" id="destino-options"></div>
+                                </div>
+                            </div>
+                            <div class="selected-items" id="destino-selected"></div>
+                            <div id="destino-hidden"></div>
+                        </div>
+                    </div>
+
+                    <!-- PRIORIDADE -->
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-exclamation-triangle-fill"></i> Prioridade
+                            </label>
+                            <select name="id_prioridade" class="form-select">
+                                <option value="">Sem prioridade</option>
+                                {% for p in prioridades %}
+                                    <option value="{{ p.id }}">{{ p.nivel }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-12 text-center mt-5">
+                        <button type="submit" class="btn btn-cadastrar">
+                            <i class="bi bi-check-circle-fill"></i> Cadastrar Dependências
+                        </button>
+                        <a href="{% url 'dependencias' %}" class="btn btn-secondary ms-3">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
-
-    <h3 class="mt-4 text-center" style="color: #ff4444;">Impactos Potenciais</h3>
-    <table class="impact-table impact-table-hover mt-3">
-        <thead>
-            <tr>
-                <th>Dependência Afetada</th>
-                <th>Variável</th>
-                <th>Impacto Possível</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for impacto in impactos %}
-                <tr>
-                    <td>{{ impacto.dependencia }}</td>
-                    <td>{{ impacto.variavel }}</td>
-                    <td>{{ impacto.descricao }}</td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="3" class="text-center">Nenhum impacto identificado.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 </div>
+
+<!-- DADOS OCULTOS -->
+<div style="display:none;">
+    <div id="data-sql">
+        {% for sql in sqls %}
+            {% if sql.id %}
+                <div class="option" data-id="{{ sql.id|safe }}" data-text="{{ sql.id }} - {{ sql.titulo|default:'Sem título' }}">{{ sql.id }} - {{ sql.titulo|default:'Sem título' }}</div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    <div id="data-report">
+        {% for rep in reports %}
+            {% if rep.id %}
+                <div class="option" data-id="{{ rep.id|safe }}" data-text="{{ rep.id }} - {{ rep.codigo }} - {{ rep.descricao|default:'Sem descrição' }}">{{ rep.id }} - {{ rep.codigo }} - {{ rep.descricao|default:'Sem descrição' }}</div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    <div id="data-fv">
+        {% for fv in fvs %}
+            {% if fv.id %}
+                <div class="option" data-id="{{ fv.id|safe }}" data-text="{{ fv.id }} - {{ fv.nome }} - {{ fv.descricao|default:'Sem descrição' }}">{{ fv.id }} - {{ fv.nome }} - {{ fv.descricao|default:'Sem descrição' }}</div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(function() {
+    const data = {
+        sql: $('#data-sql .option').map(function() { 
+            const id = parseInt($(this).data('id'));
+            return isNaN(id) ? null : { id: id, text: $(this).data('text') }; 
+        }).get().filter(Boolean),
+        report: $('#data-report .option').map(function() { 
+            const id = parseInt($(this).data('id'));
+            return isNaN(id) ? null : { id: id, text: $(this).data('text') }; 
+        }).get().filter(Boolean),
+        fv: $('#data-fv .option').map(function() { 
+            const id = parseInt($(this).data('id'));
+            return isNaN(id) ? null : { id: id, text: $(this).data('text') }; 
+        }).get().filter(Boolean)
+    };
+
+    function createSelect(side) {
+        const header = $(`#${side}-header`);
+        const input = $(`#${side}-input`);
+        const body = $(`#${side}-body`);
+        const options = $(`#${side}-options`);
+        const selected = $(`#${side}-selected`);
+        const hidden = $(`#${side}-hidden`);
+        const tabelaSelect = $(`#tabela_${side}`);
+
+        let items = [];
+        let selectedItems = [];
+
+        function renderOptions() {
+            options.empty();
+            const term = input.val().toLowerCase();
+            const filtered = items.filter(item => item.text.toLowerCase().includes(term));
+            if (filtered.length === 0) {
+                options.append('<div class="p-3 text-muted text-center">Nenhum resultado</div>');
+                return;
+            }
+            filtered.forEach(item => {
+                const selectedClass = selectedItems.includes(item.id) ? 'selected' : '';
+                options.append(`<div class="select-option ${selectedClass}" data-id="${item.id}">${item.text}</div>`);
+            });
+        }
+
+        function renderSelected() {
+            selected.empty();
+            selectedItems.forEach(id => {
+                const item = items.find(i => i.id === id);
+                if (item) {
+                    selected.append(`<div class="selected-item"><span>${item.text}</span><span class="remove" data-id="${id}">×</span></div>`);
+                }
+            });
+        }
+
+        function updateHiddenInputs() {
+            const tabela = tabelaSelect.val();
+            if (!tabela) return;
+            const campo = `id_aud_${tabela}`;
+            hidden.empty();
+            selectedItems.forEach(id => {
+                hidden.append(`<input type="hidden" name="${campo}" value="${id}">`);
+            });
+        }
+
+        // === EVENTOS ===
+        header.on('click', function(e) {
+            if (!$(e.target).is('input')) {
+                e.stopPropagation();
+                body.toggleClass('open');
+                header.toggleClass('open');
+                input.focus();
+                renderOptions();
+            }
+        });
+
+        $(document).on('click', function(e) {
+            if (!header.is(e.target) && header.has(e.target).length === 0 && !body.is(e.target) && body.has(e.target).length === 0) {
+                body.removeClass('open');
+                header.removeClass('open');
+            }
+        });
+
+        input.on('input', renderOptions);
+
+        options.on('click', '.select-option', function(e) {
+            e.stopPropagation();
+            const id = parseInt($(this).data('id'));
+            if (isNaN(id)) return;
+            if (selectedItems.includes(id)) {
+                selectedItems = selectedItems.filter(i => i !== id);
+            } else {
+                selectedItems.push(id);
+            }
+            renderSelected();
+            renderOptions();
+            updateHiddenInputs();
+        });
+
+        selected.on('click', '.remove', function(e) {
+            e.stopPropagation();
+            const id = parseInt($(this).data('id'));
+            if (isNaN(id)) return;
+            selectedItems = selectedItems.filter(i => i !== id);
+            renderSelected();
+            renderOptions();
+            updateHiddenInputs();
+        });
+
+        tabelaSelect.on('change', function() {
+            const tabela = this.value;
+            items = data[tabela] || [];
+            selectedItems = [];
+            renderOptions();
+            renderSelected();
+            updateHiddenInputs();
+            input.val('');
+            input.attr('placeholder', 'Clique para selecionar');
+        });
+    }
+
+    createSelect('origem');
+    createSelect('destino');
+
+    // === VALIDAÇÃO ANTES DO SUBMIT ===
+    $('#dependencia-form').on('submit', function(e) {
+        const origemCount = $('#origem-hidden input').length;
+        const destinoCount = $('#destino-hidden input').length;
+
+        if (origemCount === 0 || destinoCount === 0) {
+            e.preventDefault();
+            alert('Selecione 1 registro de origem e 1 de destino.');
+            return false;
+        }
+
+        if (origemCount > 1 || destinoCount > 1) {
+            e.preventDefault();
+            alert('Selecione apenas 1 registro por lado.');
+            return false;
+        }
+    });
+
+    // === LIMPA ALERTAS ===
+    {% if request.session.alerta_tipo %}
+        setTimeout(() => $('.alert').alert('close'), 5000);
+    {% endif %}
+});
+</script>
 {% endblock %}

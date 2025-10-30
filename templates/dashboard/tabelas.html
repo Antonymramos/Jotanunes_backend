@@ -1,10 +1,17 @@
-{% extends 'base.html' %}
+<!-- templates/dashboard/tabelas.html -->
+{% extends 'dashboard/base.html' %}
 {% block title %}Dependências - Tabelas | Jotanunes{% endblock %}
 {% block content %}
 <h2>Dependências - Tabelas</h2>
 <p>Gerenciamento de tabelas relacionadas ao sistema.</p>
 <table class="table table-dark table-striped mt-3">
-    <thead><tr><th>Nome</th><th>Registros</th><th>Ações</th></tr></thead>
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Registros</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
     <tbody>
         {% for tabela in tabelas %}
         <tr>
@@ -12,6 +19,8 @@
             <td>{{ tabela.registros }}</td>
             <td><a href="#" class="btn btn-danger btn-sm">Ver</a></td>
         </tr>
+        {% empty %}
+        <tr><td colspan="3" class="text-center">Nenhuma tabela encontrada.</td></tr>
         {% endfor %}
     </tbody>
 </table>

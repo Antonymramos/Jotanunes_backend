@@ -182,17 +182,17 @@
             </tr>
         </thead>
         <tbody>
-            {% for formula in formulas %}
+            
                 <tr>
                     <td>{{ formula.nome }}</td>
                     <td>{{ formula.expressao }}</td>
-                    <td><a href="{% url 'editar_formula' formula.id %}" class="btn-edit"><i class="bi bi-pencil-square formulas-icon"></i> Editar</a></td>
+                    
                 </tr>
-            {% empty %}
+           
                 <tr>
                     <td colspan="3" class="text-center">Nenhuma fórmula encontrada.</td>
                 </tr>
-            {% endfor %}
+            
         </tbody>
     </table>
 </div>

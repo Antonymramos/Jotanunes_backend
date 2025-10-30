@@ -17,20 +17,19 @@ USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# --- DB toggle sqlite/sqlserver ---
 DB_BACKEND = os.getenv("DB_BACKEND", "sqlite").lower()
 if DB_BACKEND == "sqlserver":
     DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': 'AGenreciadorJn',
-        'USER': 'sa',
-        'PASSWORD': '@Senha123',  # Substitua pela senha real do SQL Server
+        'NAME': 'AGenreciadorJn',  # ou o nome do seu banco, se for outro
+        'USER': '',  # vazio, pois você usa autenticação do Windows
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '1433',
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
-            'unicode_results': True,
+            'trusted_connection': 'yes',
             'extra_params': 'Encrypt=no;TrustServerCertificate=yes',
         },
     },
@@ -39,14 +38,14 @@ else:
     DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': 'AGenreciadorJn',
-        'USER': 'sa',
-        'PASSWORD': '@Senha123',  # Substitua pela senha real do SQL Server
+        'NAME': 'AGenreciadorJn',  # ou o nome do seu banco, se for outro
+        'USER': '',  # vazio, pois você usa autenticação do Windows
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '1433',
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
-            'unicode_results': True,
+            'trusted_connection': 'yes',
             'extra_params': 'Encrypt=no;TrustServerCertificate=yes',
         },
     },
@@ -54,16 +53,23 @@ else:
 
 INSTALLED_APPS = [
     # Django core
-    'django.contrib.admin','django.contrib.auth','django.contrib.contenttypes',
-    'django.contrib.sessions','django.contrib.messages','django.contrib.staticfiles',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
 
     # Third-party
-    'corsheaders','rest_framework','django_filters','drf_spectacular',
+    'corsheaders',
+    'rest_framework',
+    'django_filters',
+    'drf_spectacular',
 
     # Seus apps
     'core',
-    'customizacoes.apps.CustomizacoesConfig',
-    'ai.apps.AiConfig',              # <= ADICIONE ESTA LINHA
+    'customizacoes',  # ← SÓ UMA VEZ
+    'ai.apps.AiConfig',  # ← OK
 ]
 
 
@@ -143,7 +149,10 @@ TEMPLATES = [
 
 ROOT_URLCONF = 'config.urls'
 WSGI_APPLICATION = 'config.wsgi.application'
-
+# settings.py
+LOGIN_REDIRECT_URL = '/dependencias/'   # Após login
+LOGOUT_REDIRECT_URL = '/login/'         # Após logout
+LOGIN_URL = 'login'                     # URL de login
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
 

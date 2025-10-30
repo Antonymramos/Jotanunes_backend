@@ -1,219 +1,177 @@
 # customizacoes/models.py
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 
-# ==============================
-# ENUMS
-# ==============================
-
-class CustomizacaoTipo(models.TextChoices):
-    FORMULA = "FORMULA", "Fórmula Visual"
-    SQL = "SQL", "Consulta SQL"
-    RELATORIO = "RELATORIO", "Relatório"
-    OUTRO = "OUTRO", "Outro"
-
-class CustomizacaoStatus(models.TextChoices):
-    ATIVA = "ATIVA", "Ativa"
-    OBSOLETA = "OBSOLETA", "Obsoleta"
-    EM_REVISAO = "EM_REVISAO", "Em revisão"
-
-
-# ==============================
-# MODELOS BASE
-# ==============================
-
-class AbstractCustomizacao(models.Model):
-    nome = models.CharField(max_length=255, db_column="NOME", blank=True, null=True)
-    descricao_tecnica = models.TextField(db_column="DESCRICAO", blank=True, null=True)
-    criado_no_erp_em = models.DateTimeField(db_column="RECCREATEDON", null=True, blank=True)
-    alterado_no_erp_em = models.DateTimeField(db_column="RECMODIFIEDON", null=True, blank=True)
-    responsavel = models.CharField(max_length=120, db_column="RECCREATEDBY", blank=True, null=True)
-    codcoligada = models.IntegerField(db_column="CODCOLIGADA", null=True, blank=True)
-
-    tipo = models.CharField(max_length=16, choices=CustomizacaoTipo.choices, blank=True, null=True)
-    status = models.CharField(max_length=16, choices=CustomizacaoStatus.choices, blank=True, null=True)
-    versao = models.CharField(max_length=64, blank=True, null=True)
-    responsavel_email = models.EmailField(blank=True, null=True)
-    modulo = models.CharField(max_length=120, blank=True, null=True)
-    identificador_erp = models.CharField(max_length=255, blank=True, null=True)
-    conteudo = models.TextField(blank=True, null=True)
-
+class TimeStampedModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True, db_column="data_criacao")
     class Meta:
         abstract = True
 
-    def __str__(self):
-        return f"{self.nome or 'Sem nome'} ({self.tipo or 'Sem tipo'})"
+
+class ActorMixin(models.Model):
+    criado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        db_column="criado_por",
+        related_name="%(class)s_criado"
+    )
+    class Meta:
+        abstract = True
 
 
-# ==============================
-# TABELAS LEGADAS DO ERP (AUD_*)
-# ==============================
-
-class CustomizacaoFV(AbstractCustomizacao):
+# === TABELAS LEGADAS (NÃO GERENCIADAS) ===
+class CustomizacaoFV(models.Model):
     id = models.IntegerField(primary_key=True, db_column="ID")
-    categoria = models.IntegerField(db_column="IDCATEGORIA", blank=True, null=True)
+    codcoligada = models.IntegerField(db_column="CODCOLIGADA", null=True)
+    nome = models.CharField(max_length=255, db_column="NOME", blank=True, null=True)
+    descricao = models.TextField(db_column="DESCRICAO", blank=True, null=True)
+    idcategoria = models.IntegerField(db_column="IDCATEGORIA", null=True)
     ativo = models.BooleanField(db_column="ATIVO", default=True)
 
     class Meta:
         managed = False
         db_table = "AUD_FV"
 
+    def __str__(self):
+        return f"FV {self.id}: {self.nome or 'Sem nome'}"
 
-class CustomizacaoSQL(AbstractCustomizacao):
+
+class CustomizacaoSQL(models.Model):
     id = models.IntegerField(primary_key=True, db_column="CODSENTENCA")
-    tamanho = models.IntegerField(db_column="TAMANHO", blank=True, null=True)
+    codcoligada = models.IntegerField(db_column="CODCOLIGADA", null=True)
     aplicacao = models.CharField(max_length=100, db_column="APLICACAO", blank=True, null=True)
-    conteudo = models.TextField(db_column="SENTENCA", blank=True, null=True)
+    titulo = models.CharField(max_length=255, db_column="TITULO", blank=True, null=True)
+    sentenca = models.TextField(db_column="SENTENCA", blank=True, null=True)
 
     class Meta:
         managed = False
         db_table = "AUD_SQL"
 
+    def __str__(self):
+        return f"SQL {self.id}: {self.titulo or 'Sem título'}"
 
-class CustomizacaoReport(AbstractCustomizacao):
+
+class CustomizacaoReport(models.Model):
     id = models.IntegerField(primary_key=True, db_column="ID")
+    codcoligada = models.IntegerField(db_column="CODCOLIGADA", null=True)
+    codaplicacao = models.IntegerField(db_column="CODAPLICACAO", null=True)
     codigo = models.CharField(max_length=100, db_column="CODIGO", blank=True, null=True)
-    aplicacao = models.CharField(max_length=100, db_column="CODAPLICACAO", blank=True, null=True)
+    descricao = models.TextField(db_column="DESCRICAO", blank=True, null=True)
 
     class Meta:
         managed = False
         db_table = "AUD_REPORT"
 
-
-# ==============================
-# TABELAS NOVAS (CONTROLADAS)
-# ==============================
-
-class Usuario(models.Model):
-    id_usuario = models.AutoField(primary_key=True, db_column="id_usuario")
-    nome = models.CharField(max_length=255, db_column="nome")
-    email = models.EmailField(unique=True, db_column="email")
-    cargo = models.CharField(max_length=100, blank=True, db_column="cargo")
-
-    class Meta:
-        managed = True
-        db_table = "USUARIO"
-
     def __str__(self):
-        return self.nome
+        return f"REP {self.id}: {self.codigo or 'Sem código'}"
 
 
-class Notificacao(models.Model):
-    id_notificacao = models.AutoField(primary_key=True, db_column="id_notificacao")
-    titulo = models.CharField(max_length=255, db_column="titulo")
-    descricao = models.TextField(blank=True, db_column="descricao")
-    prioridade = models.CharField(max_length=50, blank=True, db_column="prioridade")
-    data_hora = models.DateTimeField(auto_now_add=True, db_column="data_hora")
-    lida = models.BooleanField(default=False, db_column="lida")
-    id_usuario = models.ForeignKey(
-        Usuario, on_delete=models.SET_NULL, null=True, blank=True,
-        db_column="id_usuario", related_name="notificacoes"
-    )
-
-    class Meta:
-        managed = True
-        db_table = "NOTIFICACAO"
-        ordering = ["-data_hora"]
-
-
-class Observacao(models.Model):
-    id = models.AutoField(primary_key=True)
+# === TABELAS NOVAS ===
+class Observacao(TimeStampedModel, ActorMixin):
     texto = models.TextField(db_column="texto")
     data = models.DateTimeField(auto_now_add=True, db_column="data")
-    criado_por = models.ForeignKey(
-        Usuario, on_delete=models.SET_NULL, null=True, blank=True,
-        db_column="criado_por", related_name="observacoes_criadas"
-    )
 
     class Meta:
         managed = True
         db_table = "Observacao"
 
+    def __str__(self):
+        return f"Obs {self.id}: {self.texto[:30]}"
+
 
 class Prioridade(models.Model):
-    id = models.AutoField(primary_key=True)
     nivel = models.CharField(max_length=50, unique=True, db_column="nivel")
 
     class Meta:
         managed = True
         db_table = "Prioridade"
 
+    def __str__(self):
+        return self.nivel
 
-# ==============================
-# CADASTRO DEPENDÊNCIAS (FKs LÓGICAS)
-# ==============================
 
-class CadastroDependencias(models.Model):
-    id = models.AutoField(primary_key=True)
-
+class CadastroDependencias(TimeStampedModel, ActorMixin):
     id_aud_sql = models.IntegerField(null=True, blank=True, db_column="id_aud_sql")
     id_aud_report = models.IntegerField(null=True, blank=True, db_column="id_aud_report")
     id_aud_fv = models.IntegerField(null=True, blank=True, db_column="id_aud_fv")
-
     id_observacao = models.ForeignKey(Observacao, on_delete=models.SET_NULL, null=True, blank=True, db_column="id_observacao")
     id_prioridade = models.ForeignKey(Prioridade, on_delete=models.SET_NULL, null=True, blank=True, db_column="id_prioridade")
-    criado_por = models.ForeignKey(Usuario, on_delete=models.CASCADE, db_column="criado_por")
-    data_criacao = models.DateTimeField(auto_now_add=True, db_column="data_criacao")
 
     class Meta:
         managed = True
         db_table = "Cadastro_Dependencias"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['id_aud_sql', 'id_aud_report', 'id_aud_fv'],
+                name='unique_dependencia_par',
+                condition=models.Q(
+                    models.Q(id_aud_sql__isnull=False) |
+                    models.Q(id_aud_report__isnull=False) |
+                    models.Q(id_aud_fv__isnull=False)
+                )
+            )
+        ]
 
     def __str__(self):
-        itens = []
-        if self.id_aud_fv: itens.append(f"FV:{self.id_aud_fv}")
-        if self.id_aud_sql: itens.append(f"SQL:{self.id_aud_sql}")
-        if self.id_aud_report: itens.append(f"REP:{self.id_aud_report}")
-        return f"Dep {self.id}: {', '.join(itens) or 'Nenhuma'}"
+        return f"{self.get_origem_display()} → {self.get_destino_display()}"
 
     @property
-    def aud_fv(self):
-        return CustomizacaoFV.objects.filter(id=self.id_aud_fv).first() if self.id_aud_fv else None
-
+    def aud_sql(self): return CustomizacaoSQL.objects.filter(id=self.id_aud_sql).first() if self.id_aud_sql else None
     @property
-    def aud_sql(self):
-        return CustomizacaoSQL.objects.filter(id=self.id_aud_sql).first() if self.id_aud_sql else None
-
+    def aud_report(self): return CustomizacaoReport.objects.filter(id=self.id_aud_report).first() if self.id_aud_report else None
     @property
-    def aud_report(self):
-        return CustomizacaoReport.objects.filter(id=self.id_aud_report).first() if self.id_aud_report else None
+    def aud_fv(self): return CustomizacaoFV.objects.filter(id=self.id_aud_fv).first() if self.id_aud_fv else None
+
+    def get_origem_display(self):
+        if self.id_aud_sql: return f"SQL {self.id_aud_sql}: {self.aud_sql.titulo if self.aud_sql else 'N/D'}"
+        if self.id_aud_report: return f"REP {self.id_aud_report}: {self.aud_report.codigo if self.aud_report else 'N/D'}"
+        if self.id_aud_fv: return f"FV {self.id_aud_fv}: {self.aud_fv.nome if self.aud_fv else 'N/D'}"
+        return "Nenhuma"
+
+    def get_destino_display(self):
+        preenchidos = [self.id_aud_sql, self.id_aud_report, self.id_aud_fv]
+        count = sum(1 for x in preenchidos if x is not None)
+        if count != 2: return "Inválido"
+        if self.id_aud_report: return f"REP {self.id_aud_report}: {self.aud_report.codigo if self.aud_report else 'N/D'}"
+        if self.id_aud_fv: return f"FV {self.id_aud_fv}: {self.aud_fv.nome if self.aud_fv else 'N/D'}"
+        if self.id_aud_sql: return f"SQL {self.id_aud_sql}: {self.aud_sql.titulo if self.aud_sql else 'N/D'}"
+        return "Nenhum"
 
     def clean(self):
-        from django.core.exceptions import ValidationError
-        errors = {}
-        if self.id_aud_fv and not CustomizacaoFV.objects.filter(id=self.id_aud_fv).exists():
-            errors['id_aud_fv'] = "Fórmula Visual não encontrada."
+        preenchidos = sum(1 for x in [self.id_aud_sql, self.id_aud_report, self.id_aud_fv] if x is not None)
+        if preenchidos != 2:
+            raise ValidationError("Exatamente 1 origem + 1 destino devem ser preenchidos.")
+
         if self.id_aud_sql and not CustomizacaoSQL.objects.filter(id=self.id_aud_sql).exists():
-            errors['id_aud_sql'] = "Consulta SQL não encontrada."
+            raise ValidationError("SQL não encontrada.")
         if self.id_aud_report and not CustomizacaoReport.objects.filter(id=self.id_aud_report).exists():
-            errors['id_aud_report'] = "Relatório não encontrado."
-        if errors:
-            raise ValidationError(errors)
+            raise ValidationError("Relatório não encontrado.")
+        if self.id_aud_fv and not CustomizacaoFV.objects.filter(id=self.id_aud_fv).exists():
+            raise ValidationError("Fórmula Visual não encontrada.")
 
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
 
 
-# ==============================
-# FUNÇÃO AUXILIAR (substitui Customizacao)
-# ==============================
+class Notificacao(models.Model):
+    titulo = models.CharField(max_length=200)
+    descricao = models.TextField()
+    prioridade = models.CharField(max_length=10)
+    data_hora = models.DateTimeField(auto_now_add=True)
+    lida = models.BooleanField(default=False)
+    id_usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='customizacoes_notificacoes'
+    )
 
-def get_customizacoes(tipo=None):
-    """Retorna queryset unificado"""
-    if tipo == "SQL":
-        return CustomizacaoSQL.objects.all()
-    elif tipo == "RELATORIO":
-        return CustomizacaoReport.objects.all()
-    else:
-        return CustomizacaoFV.objects.all()
-    
-def get_customizacoes(tipo=None):
-    """Retorna queryset unificado para qualquer tipo de customização"""
-    if tipo == "SQL":
-        return CustomizacaoSQL.objects.all()
-    elif tipo == "RELATORIO":
-        return CustomizacaoReport.objects.all()
-    else:
-        return CustomizacaoFV.objects.all()
+    class Meta:
+        managed = True
+        db_table = "NOTIFICACAO"
+
+    def __str__(self):
+        return f"{self.titulo} - {self.id_usuario.username}"
