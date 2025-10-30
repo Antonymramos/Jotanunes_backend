@@ -13,18 +13,18 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
-        /* Fundo com imagem ajustada */
+        /* Fundo com imagem cobrindo toda a tela, sem bordas - ajustado para subir mais e mostrar logo */
         body {
             margin: 0;
             height: 100vh;
-            background: url("{% static 'img/login.png' %}") center 70% no-repeat fixed; /* Subiu o foco da imagem */
-            background-size: contain; /* Mantém a imagem inteira visível */
-            background-color: #5b0000; /* Cor de fundo similar */
+            background: url("{% static 'img/login.png' %}") center 20% / cover no-repeat fixed; /* Subiu mais para focar na logo superior */
+            background-color: #5b0000; /* fallback */
             position: relative;
             font-family: 'Poppins', sans-serif;
+            overflow: hidden;
         }
 
-        /* Leve sobreposição para contraste */
+        /* Sobreposição para contraste e legibilidade */
         body::after {
             content: "";
             position: absolute;
@@ -33,7 +33,7 @@
             z-index: 0;
         }
 
-        /* Centraliza o card de login */
+        /* Container do card centralizado */
         .login-container {
             position: absolute;
             top: 50%;
@@ -91,8 +91,8 @@
         /* Responsividade */
         @media (max-width: 768px) {
             body {
-                background-position: center 80%;
                 background-size: cover;
+                background-position: center 10%; /* Subiu ainda mais no mobile para mostrar logo */
             }
 
             .login-container {

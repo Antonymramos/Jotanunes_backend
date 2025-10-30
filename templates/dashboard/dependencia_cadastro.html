@@ -79,12 +79,11 @@
     <div class="cadastro-card">
         <div class="cadastro-header">
             <h1 class="cadastro-title">
-                <i class="bi bi-diagram-3-fill"></i> Cadastrar Dependência
+                Cadastrar Dependência
             </h1>
         </div>
 
         <div class="cadastro-body">
-            <!-- AVISO DE SUCESSO -->
             {% if messages %}
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -94,7 +93,6 @@
                 {% endfor %}
             {% endif %}
 
-            <!-- ALERTA VISUAL -->
             {% if request.session.alerta_tipo %}
                 <div class="alert alert-{{ request.session.alerta_tipo }} alert-dismissible fade show" role="alert">
                     <strong>{{ request.session.alerta_mensagem }}</strong>
@@ -105,11 +103,10 @@
             <form method="post" id="dependencia-form">
                 {% csrf_token %}
                 <div class="row g-4">
-                    <!-- ORIGEM -->
                     <div class="col-lg-6">
                         <div class="form-group">
                             <label class="form-label">
-                                <i class="bi bi-box-arrow-in-right"></i> Tabela de Origem
+                                Tabela de Origem
                             </label>
                             <select name="tabela_origem" id="tabela_origem" class="form-select" required>
                                 <option value="">Selecione a tabela de origem</option>
@@ -123,7 +120,7 @@
                     <div class="col-lg-6">
                         <div class="form-group">
                             <label class="form-label">
-                                <i class="bi bi-list-check"></i> Registros de Origem
+                                Registros de Origem
                             </label>
                             <div class="select-box">
                                 <div class="select-header" id="origem-header">
@@ -141,7 +138,6 @@
                         </div>
                     </div>
 
-                    <!-- FLUXO -->
                     <div class="col-12">
                         <div class="fluxo-container">
                             <div class="fluxo-linha"></div>
@@ -150,11 +146,10 @@
                         </div>
                     </div>
 
-                    <!-- DESTINO -->
                     <div class="col-lg-6">
                         <div class="form-group">
                             <label class="form-label">
-                                <i class="bi bi-box-arrow-in-left"></i> Tabela de Destino
+                                Tabela de Destino
                             </label>
                             <select name="tabela_destino" id="tabela_destino" class="form-select" required>
                                 <option value="">Selecione a tabela de destino</option>
@@ -168,7 +163,7 @@
                     <div class="col-lg-6">
                         <div class="form-group">
                             <label class="form-label">
-                                <i class="bi bi-target"></i> Registros de Destino
+                                Registros de Destino
                             </label>
                             <div class="select-box">
                                 <div class="select-header" id="destino-header">
@@ -186,11 +181,10 @@
                         </div>
                     </div>
 
-                    <!-- PRIORIDADE -->
                     <div class="col-lg-6">
                         <div class="form-group">
                             <label class="form-label">
-                                <i class="bi bi-exclamation-triangle-fill"></i> Prioridade
+                                Prioridade
                             </label>
                             <select name="id_prioridade" class="form-select">
                                 <option value="">Sem prioridade</option>
@@ -203,10 +197,10 @@
 
                     <div class="col-12 text-center mt-5">
                         <button type="submit" class="btn btn-cadastrar">
-                            <i class="bi bi-check-circle-fill"></i> Cadastrar Dependências
+                            Cadastrar Dependências
                         </button>
                         <a href="{% url 'dependencias' %}" class="btn btn-secondary ms-3">
-                            <i class="bi bi-arrow-left"></i> Voltar
+                            Voltar
                         </a>
                     </div>
                 </div>
@@ -219,23 +213,29 @@
 <div style="display:none;">
     <div id="data-sql">
         {% for sql in sqls %}
-            {% if sql.id %}
-                <div class="option" data-id="{{ sql.id|safe }}" data-text="{{ sql.id }} - {{ sql.titulo|default:'Sem título' }}">{{ sql.id }} - {{ sql.titulo|default:'Sem título' }}</div>
-            {% endif %}
+            <div class="option" 
+                 data-id="{{ sql.id }}" 
+                 data-text="{{ sql.id }} - {{ sql.titulo|default:'Sem título' }}">
+                {{ sql.id }} - {{ sql.titulo|default:'Sem título' }}
+            </div>
         {% endfor %}
     </div>
     <div id="data-report">
         {% for rep in reports %}
-            {% if rep.id %}
-                <div class="option" data-id="{{ rep.id|safe }}" data-text="{{ rep.id }} - {{ rep.codigo }} - {{ rep.descricao|default:'Sem descrição' }}">{{ rep.id }} - {{ rep.codigo }} - {{ rep.descricao|default:'Sem descrição' }}</div>
-            {% endif %}
+            <div class="option" 
+                 data-id="{{ rep.id }}" 
+                 data-text="{{ rep.id }} - {{ rep.codigo }} - {{ rep.descricao|default:'Sem descrição' }}">
+                {{ rep.id }} - {{ rep.codigo }} - {{ rep.descricao|default:'Sem descrição' }}
+            </div>
         {% endfor %}
     </div>
     <div id="data-fv">
         {% for fv in fvs %}
-            {% if fv.id %}
-                <div class="option" data-id="{{ fv.id|safe }}" data-text="{{ fv.id }} - {{ fv.nome }} - {{ fv.descricao|default:'Sem descrição' }}">{{ fv.id }} - {{ fv.nome }} - {{ fv.descricao|default:'Sem descrição' }}</div>
-            {% endif %}
+            <div class="option" 
+                 data-id="{{ fv.id }}" 
+                 data-text="{{ fv.id }} - {{ fv.nome }} - {{ fv.descricao|default:'Sem descrição' }}">
+                {{ fv.id }} - {{ fv.nome }} - {{ fv.descricao|default:'Sem descrição' }}
+            </div>
         {% endfor %}
     </div>
 </div>
@@ -244,19 +244,29 @@
 <script>
 $(function() {
     const data = {
-        sql: $('#data-sql .option').map(function() { 
-            const id = parseInt($(this).data('id'));
-            return isNaN(id) ? null : { id: id, text: $(this).data('text') }; 
-        }).get().filter(Boolean),
-        report: $('#data-report .option').map(function() { 
-            const id = parseInt($(this).data('id'));
-            return isNaN(id) ? null : { id: id, text: $(this).data('text') }; 
-        }).get().filter(Boolean),
-        fv: $('#data-fv .option').map(function() { 
-            const id = parseInt($(this).data('id'));
-            return isNaN(id) ? null : { id: id, text: $(this).data('text') }; 
-        }).get().filter(Boolean)
+        sql: $('#data-sql .option').map(function() {
+            const id = $(this).attr('data-id').trim();
+            const text = $(this).attr('data-text') || $(this).text().trim();
+            if (!id) return null;
+            return { id, text };
+        }).get(),
+
+        report: $('#data-report .option').map(function() {
+            const id = parseInt($(this).attr('data-id'), 10);
+            const text = $(this).attr('data-text') || $(this).text().trim();
+            if (isNaN(id) || id <= 0) return null;
+            return { id, text };
+        }).get(),
+
+        fv: $('#data-fv .option').map(function() {
+            const id = parseInt($(this).attr('data-id'), 10);
+            const text = $(this).attr('data-text') || $(this).text().trim();
+            if (isNaN(id) || id <= 0) return null;
+            return { id, text };
+        }).get()
     };
+
+    console.log('Dados carregados:', data);
 
     function createSelect(side) {
         const header = $(`#${side}-header`);
@@ -274,13 +284,20 @@ $(function() {
             options.empty();
             const term = input.val().toLowerCase();
             const filtered = items.filter(item => item.text.toLowerCase().includes(term));
+
             if (filtered.length === 0) {
-                options.append('<div class="p-3 text-muted text-center">Nenhum resultado</div>');
+                const msg = items.length === 0 ? 'Nenhum registro disponível' : 'Nenhum resultado encontrado';
+                options.append(`<div class="p-3 text-muted text-center">${msg}</div>`);
                 return;
             }
+
             filtered.forEach(item => {
-                const selectedClass = selectedItems.includes(item.id) ? 'selected' : '';
-                options.append(`<div class="select-option ${selectedClass}" data-id="${item.id}">${item.text}</div>`);
+                const isSelected = selectedItems.includes(item.id);
+                options.append(
+                    `<div class="select-option ${isSelected ? 'selected' : ''}" data-id="${item.id}">
+                        ${item.text}
+                    </div>`
+                );
             });
         }
 
@@ -289,14 +306,22 @@ $(function() {
             selectedItems.forEach(id => {
                 const item = items.find(i => i.id === id);
                 if (item) {
-                    selected.append(`<div class="selected-item"><span>${item.text}</span><span class="remove" data-id="${id}">×</span></div>`);
+                    selected.append(
+                        `<div class="selected-item">
+                            <span>${item.text}</span>
+                            <span class="remove" data-id="${id}">×</span>
+                        </div>`
+                    );
                 }
             });
         }
 
         function updateHiddenInputs() {
             const tabela = tabelaSelect.val();
-            if (!tabela) return;
+            if (!tabela) {
+                hidden.empty();
+                return;
+            }
             const campo = `id_aud_${tabela}`;
             hidden.empty();
             selectedItems.forEach(id => {
@@ -304,44 +329,46 @@ $(function() {
             });
         }
 
-        // === EVENTOS ===
         header.on('click', function(e) {
-            if (!$(e.target).is('input')) {
-                e.stopPropagation();
-                body.toggleClass('open');
-                header.toggleClass('open');
-                input.focus();
-                renderOptions();
-            }
+            if ($(e.target).is('input, .remove')) return;
+            e.stopPropagation();
+            $('.select-body').removeClass('open');
+            $('.select-header').removeClass('open');
+            body.toggleClass('open');
+            header.toggleClass('open');
+            input.focus();
+            renderOptions();
         });
 
         $(document).on('click', function(e) {
-            if (!header.is(e.target) && header.has(e.target).length === 0 && !body.is(e.target) && body.has(e.target).length === 0) {
+            if (!header.is(e.target) && header.has(e.target).length === 0 &&
+                !body.is(e.target) && body.has(e.target).length === 0) {
                 body.removeClass('open');
                 header.removeClass('open');
             }
         });
 
-        input.on('input', renderOptions);
+        input.on('input focus', renderOptions);
 
         options.on('click', '.select-option', function(e) {
             e.stopPropagation();
-            const id = parseInt($(this).data('id'));
-            if (isNaN(id)) return;
+            const id = $(this).data('id');
+            if (!id) return;
+
             if (selectedItems.includes(id)) {
-                selectedItems = selectedItems.filter(i => i !== id);
+                selectedItems = [];
             } else {
-                selectedItems.push(id);
+                selectedItems = [id];
             }
             renderSelected();
             renderOptions();
             updateHiddenInputs();
+            input.val('');
         });
 
         selected.on('click', '.remove', function(e) {
             e.stopPropagation();
-            const id = parseInt($(this).data('id'));
-            if (isNaN(id)) return;
+            const id = $(this).data('id');
             selectedItems = selectedItems.filter(i => i !== id);
             renderSelected();
             renderOptions();
@@ -352,36 +379,28 @@ $(function() {
             const tabela = this.value;
             items = data[tabela] || [];
             selectedItems = [];
+            input.val('').attr('placeholder', items.length > 0 ? 'Pesquisar...' : 'Nenhum registro');
             renderOptions();
             renderSelected();
             updateHiddenInputs();
-            input.val('');
-            input.attr('placeholder', 'Clique para selecionar');
         });
+
+        if (tabelaSelect.val()) tabelaSelect.trigger('change');
     }
 
     createSelect('origem');
     createSelect('destino');
 
-    // === VALIDAÇÃO ANTES DO SUBMIT ===
     $('#dependencia-form').on('submit', function(e) {
         const origemCount = $('#origem-hidden input').length;
         const destinoCount = $('#destino-hidden input').length;
 
-        if (origemCount === 0 || destinoCount === 0) {
+        if (origemCount !== 1 || destinoCount !== 1) {
             e.preventDefault();
-            alert('Selecione 1 registro de origem e 1 de destino.');
-            return false;
-        }
-
-        if (origemCount > 1 || destinoCount > 1) {
-            e.preventDefault();
-            alert('Selecione apenas 1 registro por lado.');
-            return false;
+            alert('Selecione exatamente 1 registro de origem e 1 de destino.');
         }
     });
 
-    // === LIMPA ALERTAS ===
     {% if request.session.alerta_tipo %}
         setTimeout(() => $('.alert').alert('close'), 5000);
     {% endif %}

@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.db.models import Count, Q
+from django.db.models import Count
 import re
 from customizacoes.models import (
     CadastroDependencias, Prioridade, Notificacao,
@@ -16,7 +16,6 @@ def dashboard_view(request):
     """Dashboard principal - mostra resumo"""
     tipo = request.GET.get('tipo', 'FV')
     
-    # Contadores para dashboard
     total_sql = CustomizacaoSQL.objects.count()
     total_reports = CustomizacaoReport.objects.count()
     total_fv = CustomizacaoFV.objects.count()
@@ -36,7 +35,6 @@ def dashboard_view(request):
 def historico_view(request):
     """Histórico de alterações"""
     tipo = request.GET.get('tipo', 'FV')
-    # Simula histórico (pode conectar com logs depois)
     historico = CadastroDependencias.objects.order_by('-created_at')[:20]
     return render(request, 'dashboard/historico.html', {
         'historico': historico,
@@ -81,56 +79,77 @@ def dependencias_view(request):
 def dependencia_cadastro_view(request):
     if request.method == 'POST':
         try:
-            # === RECEBE CAMPOS ===
+            # === RECEBE CAMPOS DINÂMICOS ===
             id_aud_sql = request.POST.getlist('id_aud_sql')
             id_aud_report = request.POST.getlist('id_aud_report')
             id_aud_fv = request.POST.getlist('id_aud_fv')
             prioridade_id = request.POST.get('id_prioridade') or None
 
-            # === VALIDAÇÃO OBRIGATÓRIA ===
+            # === VALIDAÇÃO MÍNIMA ===
             todos_ids = id_aud_sql + id_aud_report + id_aud_fv
-            if len(todos_ids) != 2:
-                messages.error(request, f"Selecione exatamente 1 origem e 1 destino. (Recebido: {len(todos_ids)})")
-                return redirect('dependencia_cadastro')
+            if len(todos_ids) < 2:
+                raise ValueError("Selecione pelo menos 1 origem e 1 destino.")
 
-            # === BUSCA OBJETO PRIORIDADE ===
+            # === BUSCA INSTÂNCIA DE PRIORIDADE ===
             prioridade_obj = None
             if prioridade_id:
                 prioridade_obj = get_object_or_404(Prioridade, id=prioridade_id)
 
-            # === CRIA DEPENDÊNCIAS ===
+            # === CRIA DEPENDÊNCIAS (MÚLTIPLAS LINHAS) ===
             dependencias = []
-            for campo, valor in [
-                ('id_aud_sql', id_aud_sql),
-                ('id_aud_report', id_aud_report),
-                ('id_aud_fv', id_aud_fv)
-            ]:
-                if valor:
-                    for v in valor:
-                        data = {
-                            campo: int(v),
-                            'id_prioridade': prioridade_obj,
-                            'criado_por': request.user
-                        }
-                        dep = CadastroDependencias(**data)
-                        dep.full_clean()  # ← VALIDAÇÃO DO MODEL
-                        dependencias.append(dep)
+            origens = []
+            destinos = []
+
+            # === COLETA ORIGENS E DESTINOS ===
+            if id_aud_sql:
+                origens.extend(id_aud_sql)
+                destinos.extend(id_aud_report + id_aud_fv)
+            if id_aud_report:
+                origens.extend(id_aud_report)
+                destinos.extend(id_aud_sql + id_aud_fv)
+            if id_aud_fv:
+                origens.extend(id_aud_fv)
+                destinos.extend(id_aud_sql + id_aud_report)
+
+            # === CONVERTE TUDO PARA INT ===
+            def safe_int(value):
+                try:
+                    return int(value)
+                except (ValueError, TypeError):
+                    raise ValueError(f"ID inválido (deve ser número): {value}")
+
+            # === CRIA LINHAS ===
+            for origem_id in origens:
+                for destino_id in destinos:
+                    if origem_id == destino_id:
+                        continue
+
+                    data = {'criado_por': request.user, 'id_prioridade': prioridade_obj}
+
+                    # === SALVA COMO INT (TODOS OS CAMPOS) ===
+                    if origem_id in id_aud_sql:
+                        data['id_aud_sql'] = safe_int(origem_id)
+                    elif origem_id in id_aud_report:
+                        data['id_aud_report'] = safe_int(origem_id)
+                    elif origem_id in id_aud_fv:
+                        data['id_aud_fv'] = safe_int(origem_id)
+
+                    if destino_id in id_aud_sql:
+                        data['id_aud_sql'] = safe_int(destino_id)
+                    elif destino_id in id_aud_report:
+                        data['id_aud_report'] = safe_int(destino_id)
+                    elif destino_id in id_aud_fv:
+                        data['id_aud_fv'] = safe_int(destino_id)
+
+                    dep = CadastroDependencias(**data)
+                    dep.full_clean()
+                    dependencias.append(dep)
 
             CadastroDependencias.objects.bulk_create(dependencias)
 
-            # === ALERTA VISUAL + NOTIFICAÇÃO ===
+            # === NOTIFICAÇÃO ===
             if prioridade_obj:
                 nivel = prioridade_obj.nivel
-
-                # ALERTA VISUAL
-                request.session['alerta_tipo'] = {
-                    'Baixa': 'success',
-                    'Média': 'warning',
-                    'Alta': 'danger'
-                }[nivel]
-                request.session['alerta_mensagem'] = f"Dependência {nivel} cadastrada com sucesso!"
-
-                # NOTIFICAÇÃO
                 for usuario in User.objects.all():
                     Notificacao.objects.create(
                         titulo=f"Dependência {nivel} criada",
@@ -139,31 +158,28 @@ def dependencia_cadastro_view(request):
                         id_usuario=usuario
                     )
 
-            # === AVISO DE SUCESSO (SEMPRE) ===
-            messages.success(request, f'{len(dependencias)} dependências cadastradas com sucesso!')
+            messages.success(request, f'{len(dependencias)} dependências cadastradas!')
             return redirect('dependencias')
 
         except Exception as e:
-            messages.error(request, f'Erro ao cadastrar: {e}')
-            return redirect('dependencia_cadastro')
+            messages.error(request, f'Erro: {e}')
 
     # === DADOS ===
     sqls = CustomizacaoSQL.objects.values('id', 'titulo').order_by('titulo')
     reports = CustomizacaoReport.objects.values('id', 'codigo', 'descricao').order_by('codigo')
     fvs = CustomizacaoFV.objects.values('id', 'nome', 'descricao').order_by('nome')
-    prioridades = Prioridade.objects.all().order_by('nivel')
+    prioridades = Prioridade.objects.values('id', 'nivel')
 
     return render(request, 'dashboard/dependencia_cadastro.html', {
         'sqls': list(sqls),
         'reports': list(reports),
         'fvs': list(fvs),
-        'prioridades': prioridades,
+        'prioridades': list(prioridades),
     })
 
 
 @login_required
 def notificacoes_view(request):
-    # === CONTADORES ===
     contadores = Notificacao.objects.filter(
         id_usuario=request.user, lida=False
     ).values('prioridade').annotate(total=Count('id'))
