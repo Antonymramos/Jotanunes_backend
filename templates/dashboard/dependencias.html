@@ -14,27 +14,31 @@
         --warning: #ffc107;
         --danger: #dc3545;
         --text: #e0e0e0;
+        --text-muted: #888;
     }
     body { background: var(--bg-dark); color: var(--text); }
     .dep-container { background: var(--card-bg); border-radius: 12px; padding: 2rem; box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
     .dep-header { background: linear-gradient(135deg, var(--primary), #b30000); color: white; padding: 1.5rem; border-radius: 12px 12px 0 0; margin: -2rem -2rem 2rem -2rem; text-align: center; }
     .table th { background: linear-gradient(135deg, var(--primary), #cc0000); color: white; }
-    .table tbody tr:hover { background: #333; }
-    .badge-baixa { background: var(--success); }
+    .table tbody tr:hover { background: #333; transition: background 0.2s; }
+    .badge-baixa { background: var(--success); color: white; }
     .badge-media { background: var(--warning); color: #000; }
-    .badge-alta { background: var(--danger); }
+    .badge-alta { background: var(--danger); color: white; }
+    .code-tag { font-family: 'Courier New', monospace; font-size: 0.9rem; padding: 0.2rem 0.5rem; border-radius: 6px; }
+    .text-origin { background: #0d6efd; color: white; }
+    .text-destino { background: #198754; color: white; }
 </style>
 
 <div class="container py-5">
     <div class="dep-container">
         <div class="dep-header">
             <h1 class="mb-0">
-                <i class="bi bi-diagram-3"></i> Cadastro de dependencias
+                <i class="bi bi-diagram-3"></i> Dependências Cadastradas
             </h1>
         </div>
 
         <div class="text-center mb-4">
-            <a href="{% url 'dependencia_cadastro' %}" class="btn btn-danger">
+            <a href="{% url 'dependencia_cadastro' %}" class="btn btn-danger btn-lg">
                 + Nova Dependência
             </a>
         </div>
@@ -55,28 +59,53 @@
                     {% for dep in dependencias %}
                     <tr>
                         <td><strong>#{{ dep.id }}</strong></td>
-                        <td><code class="text-primary">{{ dep.get_origem_display }}</code></td>
-                        <td><code class="text-success">{{ dep.get_destino_display }}</code></td>
+
                         <td>
-                            {% if dep.id_prioridade %}
-                                <span class="badge 
-                                    {% if dep.id_prioridade.nivel == 'Alta' %}badge-alta
-                                    {% elif dep.id_prioridade.nivel == 'Média' %}badge-media
-                                    {% else %}badge-baixa{% endif %}">
-                                    {{ dep.id_prioridade.nivel }}
-                                </span>
+                            {% if dep.origem_label %}
+                                <code class="code-tag text-origin">{{ dep.origem_label }}</code>
                             {% else %}
                                 <span class="text-muted">—</span>
                             {% endif %}
                         </td>
-                        <td>{{ dep.criado_por.get_full_name|default:dep.criado_por.username }}</td>
-                        <td>{{ dep.created_at|date:"d/m H:i" }}</td>
+
+                        <td>
+                            {% if dep.destino_label %}
+                                <code class="code-tag text-destino">{{ dep.destino_label }}</code>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if dep.prioridade_nivel %}
+                                <span class="badge 
+                                    {% if dep.prioridade_nivel == 'Alta' %}badge-alta
+                                    {% elif dep.prioridade_nivel == 'Média' %}badge-media
+                                    {% else %}badge-baixa{% endif %}">
+                                    {{ dep.prioridade_nivel }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">Sem prioridade</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <i class="bi bi-person-fill"></i>
+                            {{ dep.criado_por|capfirst }}
+                        </td>
+
+                        <td title="{{ dep.data_criacao|date:'d/m/Y H:i:s' }}">
+                            {{ dep.data_criacao|date:"d/m H:i" }}
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
                         <td colspan="6" class="text-center py-5">
                             <i class="bi bi-inbox display-1 text-muted d-block mb-3"></i>
-                            <p>Nenhuma dependência cadastrada.</p>
+                            <p class="text-muted">Nenhuma dependência cadastrada.</p>
+                            <a href="{% url 'dependencia_cadastro' %}" class="btn btn-outline-danger mt-3">
+                                Cadastrar a primeira
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}

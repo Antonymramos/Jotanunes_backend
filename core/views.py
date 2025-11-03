@@ -13,14 +13,12 @@ from customizacoes.models import (
 
 @login_required
 def dashboard_view(request):
-    """Dashboard principal - mostra resumo"""
     tipo = request.GET.get('tipo', 'FV')
-    
     total_sql = CustomizacaoSQL.objects.count()
     total_reports = CustomizacaoReport.objects.count()
     total_fv = CustomizacaoFV.objects.count()
     total_deps = CadastroDependencias.objects.count()
-    
+
     context = {
         'total_sql': total_sql,
         'total_reports': total_reports,
@@ -33,7 +31,6 @@ def dashboard_view(request):
 
 @login_required
 def historico_view(request):
-    """Histórico de alterações"""
     tipo = request.GET.get('tipo', 'FV')
     historico = CadastroDependencias.objects.order_by('-data_criacao')[:20]
     return render(request, 'dashboard/historico.html', {
@@ -44,7 +41,6 @@ def historico_view(request):
 
 @login_required
 def verificacao_view(request, pk=None):
-    """Verificação de dependências"""
     if pk:
         dep = get_object_or_404(CadastroDependencias, pk=pk)
         return render(request, 'dashboard/verificacao_detalhe.html', {'dep': dep})
@@ -54,11 +50,11 @@ def verificacao_view(request, pk=None):
         for dep in dependencias:
             status = "OK"
             detalhes = []
-            if dep.id_aud_fv and not dep.aud_fv:
+            if dep.id_aud_fv and not CustomizacaoFV.objects.filter(id=dep.id_aud_fv).exists():
                 status = "ERRO"; detalhes.append("FV não encontrada")
-            if dep.id_aud_sql and not dep.aud_sql:
+            if dep.id_aud_sql and not CustomizacaoSQL.objects.filter(codsentenca=dep.id_aud_sql).exists():
                 status = "ERRO"; detalhes.append("SQL não encontrada")
-            if dep.id_aud_report and not dep.aud_report:
+            if dep.id_aud_report and not CustomizacaoReport.objects.filter(id=dep.id_aud_report).exists():
                 status = "ERRO"; detalhes.append("Report não encontrado")
             resultados.append({'dep': dep, 'status': status, 'detalhes': detalhes})
         return render(request, 'dashboard/verificacao.html', {'resultados': resultados})
@@ -66,123 +62,223 @@ def verificacao_view(request, pk=None):
 
 @login_required
 def dependencias_view(request):
-    """Lista todas as dependências"""
-    dependencias = CadastroDependencias.objects.order_by('-data_criacao')
-    return render(request, 'dashboard/dependencias.html', {
-        'dependencias': dependencias
-    })
+    dependencias = CadastroDependencias.objects.all().order_by('-data_criacao')
+    deps_com_dados = []
 
+    for dep in dependencias:
+        dados = {
+            'id': dep.id,
+            'id_aud_sql': dep.id_aud_sql,
+            'id_aud_report': dep.id_aud_report,
+            'id_aud_fv': dep.id_aud_fv,
+            'data_criacao': dep.data_criacao,
+            'criado_por': dep.criado_por,
+            'prioridade_id': dep.id_prioridade,
+            'prioridade_nivel': None,
+            'origem_label': '—',
+            'destino_label': '—',
+        }
+
+        # PRIORIDADE
+        if dep.id_prioridade:
+            try:
+                p = Prioridade.objects.filter(id=dep.id_prioridade).values('nivel').first()
+                if p:
+                    dados['prioridade_nivel'] = p['nivel']
+            except:
+                dados['prioridade_nivel'] = 'Desconhecida'
+
+        # === ORIGEM ===
+        if dep.id_aud_sql:
+            sql = CustomizacaoSQL.objects.filter(codsentenca=dep.id_aud_sql).values('codsentenca', 'titulo').first()
+            if sql:
+                label = f"SQL: {sql['codsentenca']}"
+                if sql['titulo']:
+                    label += f" - {sql['titulo']}"
+                dados['origem_label'] = label
+        elif dep.id_aud_report:
+            rep = CustomizacaoReport.objects.filter(id=dep.id_aud_report).values('id', 'codigo').first()
+            if rep:
+                label = f"REP: {rep['id']}"
+                if rep['codigo']:
+                    label += f" - {rep['codigo']}"
+                dados['origem_label'] = label
+        elif dep.id_aud_fv:
+            fv = CustomizacaoFV.objects.filter(id=dep.id_aud_fv).values('id', 'nome').first()
+            if fv:
+                label = f"FV: {fv['id']}"
+                if fv['nome']:
+                    label += f" - {fv['nome']}"
+                dados['origem_label'] = label
+
+        # === DESTINO (SEPARADO!) ===
+        if dep.id_aud_sql and dep.id_aud_report:
+            rep = CustomizacaoReport.objects.filter(id=dep.id_aud_report).values('id', 'codigo').first()
+            if rep:
+                label = f"REP: {rep['id']}"
+                if rep['codigo']:
+                    label += f" - {rep['codigo']}"
+                dados['destino_label'] = label
+        elif dep.id_aud_sql and dep.id_aud_fv:
+            fv = CustomizacaoFV.objects.filter(id=dep.id_aud_fv).values('id', 'nome').first()
+            if fv:
+                label = f"FV: {fv['id']}"
+                if fv['nome']:
+                    label += f" - {fv['nome']}"
+                dados['destino_label'] = label
+        elif dep.id_aud_report and dep.id_aud_sql:
+            sql = CustomizacaoSQL.objects.filter(codsentenca=dep.id_aud_sql).values('codsentenca', 'titulo').first()
+            if sql:
+                label = f"SQL: {sql['codsentenca']}"
+                if sql['titulo']:
+                    label += f" - {sql['titulo']}"
+                dados['destino_label'] = label
+        elif dep.id_aud_report and dep.id_aud_fv:
+            fv = CustomizacaoFV.objects.filter(id=dep.id_aud_fv).values('id', 'nome').first()
+            if fv:
+                label = f"FV: {fv['id']}"
+                if fv['nome']:
+                    label += f" - {fv['nome']}"
+                dados['destino_label'] = label
+        elif dep.id_aud_fv and dep.id_aud_sql:
+            sql = CustomizacaoSQL.objects.filter(codsentenca=dep.id_aud_sql).values('codsentenca', 'titulo').first()
+            if sql:
+                label = f"SQL: {sql['codsentenca']}"
+                if sql['titulo']:
+                    label += f" - {sql['titulo']}"
+                dados['destino_label'] = label
+        elif dep.id_aud_fv and dep.id_aud_report:
+            rep = CustomizacaoReport.objects.filter(id=dep.id_aud_aud_report).values('id', 'codigo').first()
+            if rep:
+                label = f"REP: {rep['id']}"
+                if rep['codigo']:
+                    label += f" - {rep['codigo']}"
+                dados['destino_label'] = label
+
+        deps_com_dados.append(dados)
+
+    return render(request, 'dashboard/dependencias.html', {
+        'dependencias': deps_com_dados
+    })
 
 @login_required
 def dependencia_cadastro_view(request):
     if request.method == 'POST':
         try:
-            # === RECEBE CAMPOS DINÂMICOS ===
-            id_aud_sql = request.POST.getlist('id_aud_sql')
-            id_aud_report = request.POST.getlist('id_aud_report')
-            id_aud_fv = request.POST.getlist('id_aud_fv')
-            prioridade_id = request.POST.get('id_prioridade') or None
+            # === RECEBE MÚLTIPLOS ===
+            id_aud_sql = request.POST.getlist('id_aud_sql') or []
+            id_aud_report = request.POST.getlist('id_aud_report') or []
+            id_aud_fv = request.POST.getlist('id_aud_fv') or []
+            prioridade_raw = request.POST.get('id_prioridade', '').strip()
 
-            # === VALIDAÇÃO MÍNIMA ===
-            todos_ids = id_aud_sql + id_aud_report + id_aud_fv
-            if len(todos_ids) < 2:
-                raise ValueError("Selecione pelo menos 1 origem e 1 destino.")
-
-            # === BUSCA INSTÂNCIA DE PRIORIDADE ===
-            prioridade_obj = None
-            if prioridade_id:
-                prioridade_obj = get_object_or_404(Prioridade, id=prioridade_id)
-
-            # === CRIA DEPENDÊNCIAS (MÚLTIPLAS LINHAS) ===
-            dependencias = []
+            # === COLETA ORIGENS E DESTINOS ===
             origens = []
             destinos = []
 
-            # === COLETA ORIGENS E DESTINOS ===
-            if id_aud_sql:
-                origens.extend(id_aud_sql)
-                destinos.extend(id_aud_report + id_aud_fv)
-            if id_aud_report:
-                origens.extend(id_aud_report)
-                destinos.extend(id_aud_sql + id_aud_fv)
-            if id_aud_fv:
-                origens.extend(id_aud_fv)
-                destinos.extend(id_aud_sql + id_aud_report)
+            # ORIGENS
+            for item in id_aud_sql:
+                if item.strip(): origens.append(('sql', item.strip()))
+            for item in id_aud_report:
+                if item.strip(): origens.append(('report', int(item)))
+            for item in id_aud_fv:
+                if item.strip(): origens.append(('fv', int(item)))
 
-            # === CRIA LINHAS (1 por par) ===
-            for origem_id in origens:
-                for destino_id in destinos:
-                    if origem_id == destino_id:
-                        continue
+            # DESTINOS
+            for item in id_aud_sql:
+                if item.strip() and ('sql', item.strip()) not in origens:
+                    destinos.append(('sql', item.strip()))
+            for item in id_aud_report:
+                if item.strip() and ('report', int(item)) not in origens:
+                    destinos.append(('report', int(item)))
+            for item in id_aud_fv:
+                if item.strip() and ('fv', int(item)) not in origens:
+                    destinos.append(('fv', int(item)))
 
+            # VALIDAÇÃO
+            if not origens or not destinos:
+                raise ValueError("Selecione pelo menos 1 origem e 1 destino.")
+
+            # PRIORIDADE
+            id_prioridade = None
+            if prioridade_raw and prioridade_raw.isdigit():
+                try:
+                    prioridade_obj = Prioridade.objects.get(id=int(prioridade_raw))
+                    id_prioridade = prioridade_obj.id
+                except Prioridade.DoesNotExist:
+                    messages.warning(request, f"Prioridade ID {prioridade_raw} não existe.")
+
+            # === CRIA MÚLTIPLAS DEPENDÊNCIAS ===
+            dependencias_criadas = 0
+            for tipo_o, valor_o in origens:
+                for tipo_d, valor_d in destinos:
                     data = {
-                        'criado_por': request.user.id,
-                        'id_prioridade': prioridade_obj.id if prioridade_obj else None
+                        'criado_por': request.user.username or 'ANONYMOUS',
+                        'id_prioridade': id_prioridade
                     }
 
-                    # === SALVA COMO STRING PARA SQL, INT PARA OUTROS ===
-                    if origem_id in id_aud_sql:
-                        data['id_aud_sql'] = origem_id  # STRING
-                    elif origem_id in id_aud_report:
-                        data['id_aud_report'] = int(origem_id)  # INT
-                    elif origem_id in id_aud_fv:
-                        data['id_aud_fv'] = int(origem_id)  # INT
+                    # ORIGEM
+                    if tipo_o == 'sql':
+                        data['id_aud_sql'] = valor_o
+                    elif tipo_o == 'report':
+                        data['id_aud_report'] = valor_o
+                    elif tipo_o == 'fv':
+                        data['id_aud_fv'] = valor_o
 
-                    if destino_id in id_aud_sql:
-                        data['id_aud_sql'] = destino_id  # STRING
-                    elif destino_id in id_aud_report:
-                        data['id_aud_report'] = int(destino_id)  # INT
-                    elif destino_id in id_aud_fv:
-                        data['id_aud_fv'] = int(destino_id)  # INT
+                    # DESTINO
+                    if tipo_d == 'sql':
+                        data['id_aud_sql'] = valor_d
+                    elif tipo_d == 'report':
+                        data['id_aud_report'] = valor_d
+                    elif tipo_d == 'fv':
+                        data['id_aud_fv'] = valor_d
 
                     dep = CadastroDependencias(**data)
                     dep.full_clean()
-                    dependencias.append(dep)
+                    dep.save()
+                    dependencias_criadas += 1
 
-            CadastroDependencias.objects.bulk_create(dependencias)
-
-            # === NOTIFICAÇÃO ===
-            if prioridade_obj:
-                nivel = prioridade_obj.nivel
-                for usuario in User.objects.all():
+            # === NOTIFICAÇÃO PARA GESTOR ===
+            if id_prioridade and dependencias_criadas > 0:
+                nivel = Prioridade.objects.get(id=id_prioridade).nivel
+                gestor = User.objects.filter(username='gestor').first()
+                if gestor:
                     Notificacao.objects.create(
-                        titulo=f"Dependência {nivel} criada",
-                        descricao=f"{request.user.username} cadastrou uma nova dependência.",
+                        titulo=f"{dependencias_criadas} dependências {nivel} criadas",
+                        descricao=f"{request.user.username} cadastrou {dependencias_criadas} dependências com prioridade {nivel}.",
                         prioridade=nivel,
-                        id_usuario=usuario.id
+                        id_usuario=gestor.username
                     )
 
-            messages.success(request, f'{len(dependencias)} dependências cadastradas!')
+            messages.success(request, f'{dependencias_criadas} dependências cadastradas com sucesso!')
             return redirect('dependencias')
 
         except Exception as e:
             messages.error(request, f'Erro: {e}')
 
-    # === DADOS ===
-    sqls = CustomizacaoSQL.objects.values('id', 'titulo').order_by('titulo')
+    # === GET ===
+    sqls = CustomizacaoSQL.objects.values('codsentenca', 'titulo').order_by('titulo')
     reports = CustomizacaoReport.objects.values('id', 'codigo', 'descricao').order_by('codigo')
     fvs = CustomizacaoFV.objects.values('id', 'nome', 'descricao').order_by('nome')
-    prioridades = Prioridade.objects.values('id', 'nivel')
+    prioridades = Prioridade.objects.all().order_by('id')
 
     return render(request, 'dashboard/dependencia_cadastro.html', {
         'sqls': list(sqls),
         'reports': list(reports),
         'fvs': list(fvs),
-        'prioridades': list(prioridades),
+        'prioridades': prioridades,
     })
-
 
 @login_required
 def notificacoes_view(request):
     contadores = Notificacao.objects.filter(
-        id_usuario=request.user.id, lida=False
+        id_usuario=request.user.username, lida=False
     ).values('prioridade').annotate(total=Count('id'))
 
     alta_count = next((c['total'] for c in contadores if c['prioridade'] == 'Alta'), 0)
     media_count = next((c['total'] for c in contadores if c['prioridade'] == 'Média'), 0)
     baixa_count = next((c['total'] for c in contadores if c['prioridade'] == 'Baixa'), 0)
 
-    notificacoes = Notificacao.objects.filter(id_usuario=request.user.id).order_by('-data_hora')
+    notificacoes = Notificacao.objects.filter(id_usuario=request.user.username).order_by('-data_hora')
 
     return render(request, 'dashboard/notificacoes.html', {
         'notificacoes': notificacoes,
@@ -194,7 +290,7 @@ def notificacoes_view(request):
 
 @login_required
 def marcar_lida_view(request, pk):
-    notif = get_object_or_404(Notificacao, pk=pk, id_usuario=request.user.id)
+    notif = get_object_or_404(Notificacao, pk=pk, id_usuario=request.user.username)
     if request.method == 'POST':
         notif.lida = True
         notif.save()
@@ -204,9 +300,8 @@ def marcar_lida_view(request, pk):
 
 @login_required
 def sql_view(request, pk=None):
-    """Lista e detalha consultas SQL"""
     if pk:
-        sql = get_object_or_404(CustomizacaoSQL, id=pk)
+        sql = get_object_or_404(CustomizacaoSQL, pk=pk)
         return render(request, 'dashboard/sql_detalhe.html', {'sql': sql})
     else:
         sqls = CustomizacaoSQL.objects.order_by('titulo')[:20]
@@ -215,14 +310,12 @@ def sql_view(request, pk=None):
 
 @login_required
 def formula_view(request):
-    """Lista fórmulas visuais"""
     formulas = CustomizacaoFV.objects.filter(ativo=True).order_by('nome')[:20]
     return render(request, 'dashboard/formulas.html', {'formulas': formulas})
 
 
 @login_required
 def tabelas_view(request):
-    """Extrai tabelas das consultas SQL"""
     tabelas_set = set()
     for sql in CustomizacaoSQL.objects.values_list('sentenca', flat=True):
         if sql:

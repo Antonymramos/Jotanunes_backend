@@ -64,6 +64,12 @@
     .btn-cadastrar { background: linear-gradient(135deg, var(--primary-light), var(--primary)); color: white; border: none; border-radius: 50px; padding: 0.9rem 3rem; font-weight: 600; font-size: 1.1rem; box-shadow: 0 6px 20px rgba(212, 0, 0, 0.3); transition: var(--transition); min-width: 220px; }
     .btn-cadastrar:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(212, 0, 0, 0.4); }
 
+    .add-origem, .add-destino, .remove-block {
+        width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    }
+    .add-origem, .add-destino { background: rgba(255,255,255,0.1); border: 1px solid #555; }
+    .add-origem:hover, .add-destino:hover { background: var(--primary-light); border-color: var(--primary-light); }
+
     @keyframes floatIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
@@ -93,51 +99,52 @@
                 {% endfor %}
             {% endif %}
 
-            {% if request.session.alerta_tipo %}
-                <div class="alert alert-{{ request.session.alerta_tipo }} alert-dismissible fade show" role="alert">
-                    <strong>{{ request.session.alerta_mensagem }}</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endif %}
-
             <form method="post" id="dependencia-form">
                 {% csrf_token %}
                 <div class="row g-4">
-                    <div class="col-lg-6">
-                        <div class="form-group">
-                            <label class="form-label">
-                                Tabela de Origem
-                            </label>
-                            <select name="tabela_origem" id="tabela_origem" class="form-select" required>
-                                <option value="">Selecione a tabela de origem</option>
-                                <option value="sql">AUD_SQL</option>
-                                <option value="report">AUD_REPORT</option>
-                                <option value="fv">AUD_FV</option>
-                            </select>
-                        </div>
-                    </div>
 
-                    <div class="col-lg-6">
-                        <div class="form-group">
-                            <label class="form-label">
-                                Registros de Origem
-                            </label>
-                            <div class="select-box">
-                                <div class="select-header" id="origem-header">
-                                    <input type="text" id="origem-input" placeholder="Clique para selecionar" autocomplete="off">
-                                    <div class="select-header-icons">
-                                        <i class="bi bi-chevron-down"></i>
+                    <!-- ==================== ORIGEM ==================== -->
+                    <div class="col-12">
+                        <h5 class="text-light mb-3">Origem</h5>
+                        <div id="origem-container">
+                            <div class="origem-block mb-4">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-lg-6">
+                                        <label class="form-label">Tabela de Origem</label>
+                                        <select class="form-select tabela-select" data-side="origem" required>
+                                            <option value="">Selecione a tabela</option>
+                                            <option value="sql">AUD_SQL</option>
+                                            <option value="report">AUD_REPORT</option>
+                                            <option value="fv">AUD_FV</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-lg-5">
+                                        <label class="form-label">Registros de Origem</label>
+                                        <div class="select-box">
+                                            <div class="select-header">
+                                                <input type="text" class="select-input" placeholder="Pesquisar..." autocomplete="off">
+                                                <div class="select-header-icons">
+                                                    <i class="bi bi-chevron-down"></i>
+                                                </div>
+                                            </div>
+                                            <div class="select-body">
+                                                <div class="select-options"></div>
+                                            </div>
+                                        </div>
+                                        <div class="selected-items mt-2"></div>
+                                        <div class="hidden-inputs"></div>
+                                    </div>
+                                    <div class="col-lg-1 text-end">
+                                        <button type="button" class="btn btn-sm add-origem" title="Adicionar outra origem">
+                                            <i class="bi bi-plus-lg"></i>
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="select-body" id="origem-body">
-                                    <div class="select-options" id="origem-options"></div>
-                                </div>
                             </div>
-                            <div class="selected-items" id="origem-selected"></div>
-                            <div id="origem-hidden"></div>
                         </div>
                     </div>
 
+                    <!-- ==================== FLUXO ==================== -->
                     <div class="col-12">
                         <div class="fluxo-container">
                             <div class="fluxo-linha"></div>
@@ -146,46 +153,51 @@
                         </div>
                     </div>
 
-                    <div class="col-lg-6">
-                        <div class="form-group">
-                            <label class="form-label">
-                                Tabela de Destino
-                            </label>
-                            <select name="tabela_destino" id="tabela_destino" class="form-select" required>
-                                <option value="">Selecione a tabela de destino</option>
-                                <option value="sql">AUD_SQL</option>
-                                <option value="report">AUD_REPORT</option>
-                                <option value="fv">AUD_FV</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-6">
-                        <div class="form-group">
-                            <label class="form-label">
-                                Registros de Destino
-                            </label>
-                            <div class="select-box">
-                                <div class="select-header" id="destino-header">
-                                    <input type="text" id="destino-input" placeholder="Clique para selecionar" autocomplete="off">
-                                    <div class="select-header-icons">
-                                        <i class="bi bi-chevron-down"></i>
+                    <!-- ==================== DESTINO ==================== -->
+                    <div class="col-12">
+                        <h5 class="text-light mb-3">Destino</h5>
+                        <div id="destino-container">
+                            <div class="destino-block mb-4">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-lg-6">
+                                        <label class="form-label">Tabela de Destino</label>
+                                        <select class="form-select tabela-select" data-side="destino" required>
+                                            <option value="">Selecione a tabela</option>
+                                            <option value="sql">AUD_SQL</option>
+                                            <option value="report">AUD_REPORT</option>
+                                            <option value="fv">AUD_FV</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-lg-5">
+                                        <label class="form-label">Registros de Destino</label>
+                                        <div class="select-box">
+                                            <div class="select-header">
+                                                <input type="text" class="select-input" placeholder="Pesquisar..." autocomplete="off">
+                                                <div class="select-header-icons">
+                                                    <i class="bi bi-chevron-down"></i>
+                                                </div>
+                                            </div>
+                                            <div class="select-body">
+                                                <div class="select-options"></div>
+                                            </div>
+                                        </div>
+                                        <div class="selected-items mt-2"></div>
+                                        <div class="hidden-inputs"></div>
+                                    </div>
+                                    <div class="col-lg-1 text-end">
+                                        <button type="button" class="btn btn-sm add-destino" title="Adicionar outro destino">
+                                            <i class="bi bi-plus-lg"></i>
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="select-body" id="destino-body">
-                                    <div class="select-options" id="destino-options"></div>
-                                </div>
                             </div>
-                            <div class="selected-items" id="destino-selected"></div>
-                            <div id="destino-hidden"></div>
                         </div>
                     </div>
 
+                    <!-- ==================== PRIORIDADE ==================== -->
                     <div class="col-lg-6">
                         <div class="form-group">
-                            <label class="form-label">
-                                Prioridade
-                            </label>
+                            <label class="form-label">Prioridade</label>
                             <select name="id_prioridade" class="form-select">
                                 <option value="">Sem prioridade</option>
                                 {% for p in prioridades %}
@@ -195,9 +207,10 @@
                         </div>
                     </div>
 
+                    <!-- ==================== BOTÕES ==================== -->
                     <div class="col-12 text-center mt-5">
                         <button type="submit" class="btn btn-cadastrar">
-                            Cadastrar Dependências
+                            Cadastrar Dependência
                         </button>
                         <a href="{% url 'dependencias' %}" class="btn btn-secondary ms-3">
                             Voltar
@@ -214,9 +227,9 @@
     <div id="data-sql">
         {% for sql in sqls %}
             <div class="option" 
-                 data-id="{{ sql.id }}" 
-                 data-text="{{ sql.id }} - {{ sql.titulo|default:'Sem título' }}">
-                {{ sql.id }} - {{ sql.titulo|default:'Sem título' }}
+                 data-id="{{ sql.codsentenca }}" 
+                 data-text="{{ sql.codsentenca }} - {{ sql.titulo|default:'Sem título' }}">
+                {{ sql.codsentenca }} - {{ sql.titulo|default:'Sem título' }}
             </div>
         {% endfor %}
     </div>
@@ -254,156 +267,169 @@ $(function() {
         report: $('#data-report .option').map(function() {
             const id = parseInt($(this).attr('data-id'), 10);
             const text = $(this).attr('data-text') || $(this).text().trim();
-            if (isNaN(id) || id <= 0) return null;
+            if (isNaN(id)) return null;
             return { id, text };
         }).get(),
 
         fv: $('#data-fv .option').map(function() {
             const id = parseInt($(this).attr('data-id'), 10);
             const text = $(this).attr('data-text') || $(this).text().trim();
-            if (isNaN(id) || id <= 0) return null;
+            if (isNaN(id)) return null;
             return { id, text };
         }).get()
     };
 
-    console.log('Dados carregados:', data);
-
-    function createSelect(side) {
-        const header = $(`#${side}-header`);
-        const input = $(`#${side}-input`);
-        const body = $(`#${side}-body`);
-        const options = $(`#${side}-options`);
-        const selected = $(`#${side}-selected`);
-        const hidden = $(`#${side}-hidden`);
-        const tabelaSelect = $(`#tabela_${side}`);
+    function createSelectBlock($block) {
+        const side = $block.hasClass('origem-block') ? 'origem' : 'destino';
+        const $tabela = $block.find('.tabela-select');
+        const $header = $block.find('.select-header');
+        const $input = $block.find('.select-input');
+        const $body = $block.find('.select-body');
+        const $options = $block.find('.select-options');
+        const $selected = $block.find('.selected-items');
+        const $hidden = $block.find('.hidden-inputs');
 
         let items = [];
         let selectedItems = [];
 
         function renderOptions() {
-            options.empty();
-            const term = input.val().toLowerCase();
-            const filtered = items.filter(item => item.text.toLowerCase().includes(term));
+            $options.empty();
+            const term = $input.val().toLowerCase();
+            const filtered = items.filter(item => 
+                item.text.toLowerCase().includes(term) && 
+                !selectedItems.some(s => s.id === item.id)
+            );
 
             if (filtered.length === 0) {
-                const msg = items.length === 0 ? 'Nenhum registro disponível' : 'Nenhum resultado encontrado';
-                options.append(`<div class="p-3 text-muted text-center">${msg}</div>`);
+                const msg = items.length === 0 ? 'Nenhum registro' : 'Nada encontrado';
+                $options.append(`<div class="p-3 text-muted text-center">${msg}</div>`);
                 return;
             }
 
             filtered.forEach(item => {
-                const isSelected = selectedItems.includes(item.id);
-                options.append(
-                    `<div class="select-option ${isSelected ? 'selected' : ''}" data-id="${item.id}">
-                        ${item.text}
-                    </div>`
+                $options.append(
+                    `<div class="select-option" data-id="${item.id}">${item.text}</div>`
                 );
             });
         }
 
         function renderSelected() {
-            selected.empty();
-            selectedItems.forEach(id => {
-                const item = items.find(i => i.id === id);
-                if (item) {
-                    selected.append(
-                        `<div class="selected-item">
-                            <span>${item.text}</span>
-                            <span class="remove" data-id="${id}">×</span>
-                        </div>`
-                    );
-                }
+            $selected.empty();
+            selectedItems.forEach(item => {
+                $selected.append(
+                    `<div class="selected-item">
+                        <span>${item.text}</span>
+                        <span class="remove" data-id="${item.id}">×</span>
+                    </div>`
+                );
             });
+            updateHiddenInputs();
         }
 
         function updateHiddenInputs() {
-            const tabela = tabelaSelect.val();
-            if (!tabela) {
-                hidden.empty();
-                return;
-            }
+            const tabela = $tabela.val();
+            $hidden.empty();
+            if (!tabela || selectedItems.length === 0) return;
+
             const campo = `id_aud_${tabela}`;
-            hidden.empty();
-            selectedItems.forEach(id => {
-                hidden.append(`<input type="hidden" name="${campo}" value="${id}">`);
+            selectedItems.forEach(item => {
+                $hidden.append(`<input type="hidden" name="${campo}[]" value="${item.id}">`);
             });
         }
 
-        header.on('click', function(e) {
-            if ($(e.target).is('input, .remove')) return;
+        $header.on('click', function(e) {
+            if ($(e.target).hasClass('remove')) return;
             e.stopPropagation();
             $('.select-body').removeClass('open');
             $('.select-header').removeClass('open');
-            body.toggleClass('open');
-            header.toggleClass('open');
-            input.focus();
+            $body.toggleClass('open');
+            $header.toggleClass('open');
+            $input.focus();
             renderOptions();
         });
 
-        $(document).on('click', function(e) {
-            if (!header.is(e.target) && header.has(e.target).length === 0 &&
-                !body.is(e.target) && body.has(e.target).length === 0) {
-                body.removeClass('open');
-                header.removeClass('open');
-            }
-        });
+        $input.on('input focus', renderOptions);
 
-        input.on('input focus', renderOptions);
-
-        options.on('click', '.select-option', function(e) {
+        $options.on('click', '.select-option', function(e) {
             e.stopPropagation();
             const id = $(this).data('id');
-            if (!id) return;
-
-            if (selectedItems.includes(id)) {
-                selectedItems = [];
-            } else {
-                selectedItems = [id];
+            const item = items.find(i => i.id === id);
+            if (item && !selectedItems.some(s => s.id === id)) {
+                selectedItems.push(item);
+                renderSelected();
+                renderOptions();
+                $input.val('');
             }
-            renderSelected();
-            renderOptions();
-            updateHiddenInputs();
-            input.val('');
+            $body.removeClass('open');
+            $header.removeClass('open');
         });
 
-        selected.on('click', '.remove', function(e) {
+        $selected.on('click', '.remove', function(e) {
             e.stopPropagation();
-            const id = $(this).data('id');
-            selectedItems = selectedItems.filter(i => i !== id);
+            const id = parseInt($(this).data('id'), 10);
+            selectedItems = selectedItems.filter(s => s.id !== id);
             renderSelected();
             renderOptions();
-            updateHiddenInputs();
         });
 
-        tabelaSelect.on('change', function() {
+        $tabela.on('change', function() {
             const tabela = this.value;
             items = data[tabela] || [];
             selectedItems = [];
-            input.val('').attr('placeholder', items.length > 0 ? 'Pesquisar...' : 'Nenhum registro');
-            renderOptions();
+            $input.attr('placeholder', items.length > 0 ? 'Pesquisar...' : 'Nenhum registro');
             renderSelected();
-            updateHiddenInputs();
+            renderOptions();
         });
 
-        if (tabelaSelect.val()) tabelaSelect.trigger('change');
+        if ($tabela.val()) $tabela.trigger('change');
     }
 
-    createSelect('origem');
-    createSelect('destino');
+    $('.origem-block, .destino-block').each(function() {
+        createSelectBlock($(this));
+    });
 
-    $('#dependencia-form').on('submit', function(e) {
-        const origemCount = $('#origem-hidden input').length;
-        const destinoCount = $('#destino-hidden input').length;
+    function addBlock(type) {
+        const $container = $(`#${type}-container`);
+        const $template = $container.find(`.${type}-block`).first().clone();
 
-        if (origemCount !== 1 || destinoCount !== 1) {
-            e.preventDefault();
-            alert('Selecione exatamente 1 registro de origem e 1 de destino.');
+        $template.find('select').val('');
+        $template.find('.select-input').val('');
+        $template.find('.selected-items').empty();
+        $template.find('.hidden-inputs').empty();
+
+        const $removeBtn = $(`
+            <button type="button" class="btn btn-sm btn-outline-danger remove-block ms-2" title="Remover">
+                <i class="bi bi-trash"></i>
+            </button>
+        `);
+        $template.find('.col-lg-1').append($removeBtn);
+
+        $container.append($template);
+        createSelectBlock($template);
+    }
+
+    $(document).on('click', '.add-origem', () => addBlock('origem'));
+    $(document).on('click', '.add-destino', () => addBlock('destino'));
+
+    $(document).on('click', '.remove-block', function() {
+        const $block = $(this).closest('.mb-4');
+        const container = $block.parent().attr('id');
+        if ($(`#${container} .mb-4`).length > 1) {
+            $block.remove();
+        } else {
+            alert('Pelo menos um bloco é obrigatório.');
         }
     });
 
-    {% if request.session.alerta_tipo %}
-        setTimeout(() => $('.alert').alert('close'), 5000);
-    {% endif %}
+    $('#dependencia-form').on('submit', function(e) {
+        const origens = $('#origem-container input[name^="id_aud_"]').length;
+        const destinos = $('#destino-container input[name^="id_aud_"]').length;
+
+        if (origens === 0 || destinos === 0) {
+            e.preventDefault();
+            alert('Selecione pelo menos 1 origem e 1 destino.');
+        }
+    });
 });
 </script>
 {% endblock %}
