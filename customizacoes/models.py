@@ -4,24 +4,6 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 
 
-class TimeStampedModel(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True, db_column="data_criacao")
-    class Meta:
-        abstract = True
-
-
-class ActorMixin(models.Model):
-    criado_por = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        db_column="criado_por",
-        related_name="%(class)s_criado"
-    )
-    class Meta:
-        abstract = True
-
-
 # === TABELAS LEGADAS (NÃO GERENCIADAS) ===
 class CustomizacaoFV(models.Model):
     id = models.IntegerField(primary_key=True, db_column="ID")
@@ -44,7 +26,7 @@ class CustomizacaoFV(models.Model):
 
 
 class CustomizacaoSQL(models.Model):
-    id = models.IntegerField(primary_key=True, db_column="CODSENTENCA")  # ← INT
+    id = models.CharField(primary_key=True, max_length=100, db_column="CODSENTENCA")  # STRING
     codcoligada = models.IntegerField(db_column="CODCOLIGADA", null=True)
     aplicacao = models.CharField(max_length=100, db_column="APLICACAO", blank=True, null=True)
     titulo = models.CharField(max_length=255, db_column="TITULO", blank=True, null=True)
@@ -83,9 +65,10 @@ class CustomizacaoReport(models.Model):
 
 
 # === TABELAS NOVAS ===
-class Observacao(TimeStampedModel, ActorMixin):
+class Observacao(models.Model):
     texto = models.TextField(db_column="texto")
     data = models.DateTimeField(auto_now_add=True, db_column="data")
+    criado_por = models.IntegerField(null=True, blank=True, db_column="criado_por")
 
     class Meta:
         managed = True
@@ -106,14 +89,14 @@ class Prioridade(models.Model):
         return self.nivel
 
 
-
-
-class CadastroDependencias(TimeStampedModel, ActorMixin):
-    id_aud_sql = models.IntegerField(null=True, blank=True, db_column="id_aud_sql")  # ← INT
+class CadastroDependencias(models.Model):
+    id_aud_sql = models.CharField(max_length=100, null=True, blank=True, db_column="id_aud_sql")  # STRING
     id_aud_report = models.IntegerField(null=True, blank=True, db_column="id_aud_report")
     id_aud_fv = models.IntegerField(null=True, blank=True, db_column="id_aud_fv")
-    id_observacao = models.ForeignKey(Observacao, on_delete=models.SET_NULL, null=True, blank=True, db_column="id_observacao")
-    id_prioridade = models.ForeignKey(Prioridade, on_delete=models.SET_NULL, null=True, blank=True, db_column="id_prioridade")
+    id_observacao = models.IntegerField(null=True, blank=True, db_column="id_observacao")
+    id_prioridade = models.IntegerField(null=True, blank=True, db_column="id_prioridade")
+    data_criacao = models.DateTimeField(auto_now_add=True, db_column="data_criacao")
+    criado_por = models.IntegerField(null=True, blank=True, db_column="criado_por")
 
     class Meta:
         managed = True
@@ -176,16 +159,11 @@ class Notificacao(models.Model):
     prioridade = models.CharField(max_length=10)
     data_hora = models.DateTimeField(auto_now_add=True)
     lida = models.BooleanField(default=False)
-    id_usuario = models.ForeignKey(  # ← FK CORRETO
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        db_column="id_usuario",
-        related_name='customizacoes_notificacoes'
-    )
+    id_usuario = models.IntegerField(db_column="id_usuario")
 
     class Meta:
         managed = True
         db_table = "NOTIFICACAO"
 
     def __str__(self):
-        return f"{self.titulo} - {self.id_usuario.username}"
+        return f"{self.titulo} - ID {self.id_usuario}"

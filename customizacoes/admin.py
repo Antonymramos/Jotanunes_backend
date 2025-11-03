@@ -2,17 +2,17 @@
 from django.contrib import admin
 from .models import (
     Observacao, Prioridade, CadastroDependencias,
-    CustomizacaoFV, CustomizacaoSQL, CustomizacaoReport,
-    Notificacao
+    CustomizacaoFV, CustomizacaoSQL, CustomizacaoReport
 )
+
 
 # === DEPENDÊNCIAS ===
 @admin.register(CadastroDependencias)
 class CadastroDependenciasAdmin(admin.ModelAdmin):
-    list_display = ('id', 'origem', 'destino', 'criado_por', 'created_at', 'prioridade_badge')
-    list_filter = ('created_at', 'id_prioridade__nivel')
+    list_display = ('id', 'origem', 'destino', 'criado_por', 'data_criacao', 'prioridade_badge')  # ← data_criacao
+    list_filter = ('data_criacao', 'id_prioridade')  # ← data_criacao + id_prioridade
     search_fields = ('id_aud_sql', 'id_aud_report', 'id_aud_fv')
-    readonly_fields = ('created_at',)
+    readonly_fields = ('data_criacao',)  # ← data_criacao
 
     def origem(self, obj):
         return obj.get_origem_display()
@@ -70,16 +70,3 @@ class ObservacaoAdmin(admin.ModelAdmin):
 class PrioridadeAdmin(admin.ModelAdmin):
     list_display = ('id', 'nivel')
     search_fields = ('nivel',)
-
-
-# === NOTIFICAÇÃO ===
-@admin.register(Notificacao)
-class NotificacaoAdmin(admin.ModelAdmin):
-    list_display = ('titulo', 'id_usuario', 'prioridade', 'data_hora', 'lida')
-    list_filter = ('prioridade', 'lida', 'data_hora')
-    search_fields = ('titulo', 'descricao', 'id_usuario__username')
-    readonly_fields = ('data_hora',)
-    ordering = ('-data_hora',)
-
-    def has_add_permission(self, request):
-        return False

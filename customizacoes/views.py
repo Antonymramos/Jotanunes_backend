@@ -12,6 +12,10 @@ from django.http import HttpResponse, JsonResponse
 import csv, io, json
 from django.contrib.auth.decorators import login_required
 
+class Q:
+    def __init__(self):
+        pass
+
 class CustomizacaoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]

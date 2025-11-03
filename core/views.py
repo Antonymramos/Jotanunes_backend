@@ -35,7 +35,7 @@ def dashboard_view(request):
 def historico_view(request):
     """Histórico de alterações"""
     tipo = request.GET.get('tipo', 'FV')
-    historico = CadastroDependencias.objects.order_by('-created_at')[:20]
+    historico = CadastroDependencias.objects.order_by('-data_criacao')[:20]
     return render(request, 'dashboard/historico.html', {
         'historico': historico,
         'tipo': tipo
@@ -67,9 +67,7 @@ def verificacao_view(request, pk=None):
 @login_required
 def dependencias_view(request):
     """Lista todas as dependências"""
-    dependencias = CadastroDependencias.objects.select_related(
-        'criado_por', 'id_prioridade'
-    ).order_by('-created_at')
+    dependencias = CadastroDependencias.objects.order_by('-data_criacao')
     return render(request, 'dashboard/dependencias.html', {
         'dependencias': dependencias
     })
@@ -111,35 +109,31 @@ def dependencia_cadastro_view(request):
                 origens.extend(id_aud_fv)
                 destinos.extend(id_aud_sql + id_aud_report)
 
-            # === CONVERTE TUDO PARA INT ===
-            def safe_int(value):
-                try:
-                    return int(value)
-                except (ValueError, TypeError):
-                    raise ValueError(f"ID inválido (deve ser número): {value}")
-
-            # === CRIA LINHAS ===
+            # === CRIA LINHAS (1 por par) ===
             for origem_id in origens:
                 for destino_id in destinos:
                     if origem_id == destino_id:
                         continue
 
-                    data = {'criado_por': request.user, 'id_prioridade': prioridade_obj}
+                    data = {
+                        'criado_por': request.user.id,
+                        'id_prioridade': prioridade_obj.id if prioridade_obj else None
+                    }
 
-                    # === SALVA COMO INT (TODOS OS CAMPOS) ===
+                    # === SALVA COMO STRING PARA SQL, INT PARA OUTROS ===
                     if origem_id in id_aud_sql:
-                        data['id_aud_sql'] = safe_int(origem_id)
+                        data['id_aud_sql'] = origem_id  # STRING
                     elif origem_id in id_aud_report:
-                        data['id_aud_report'] = safe_int(origem_id)
+                        data['id_aud_report'] = int(origem_id)  # INT
                     elif origem_id in id_aud_fv:
-                        data['id_aud_fv'] = safe_int(origem_id)
+                        data['id_aud_fv'] = int(origem_id)  # INT
 
                     if destino_id in id_aud_sql:
-                        data['id_aud_sql'] = safe_int(destino_id)
+                        data['id_aud_sql'] = destino_id  # STRING
                     elif destino_id in id_aud_report:
-                        data['id_aud_report'] = safe_int(destino_id)
+                        data['id_aud_report'] = int(destino_id)  # INT
                     elif destino_id in id_aud_fv:
-                        data['id_aud_fv'] = safe_int(destino_id)
+                        data['id_aud_fv'] = int(destino_id)  # INT
 
                     dep = CadastroDependencias(**data)
                     dep.full_clean()
@@ -155,7 +149,7 @@ def dependencia_cadastro_view(request):
                         titulo=f"Dependência {nivel} criada",
                         descricao=f"{request.user.username} cadastrou uma nova dependência.",
                         prioridade=nivel,
-                        id_usuario=usuario
+                        id_usuario=usuario.id
                     )
 
             messages.success(request, f'{len(dependencias)} dependências cadastradas!')
@@ -181,14 +175,14 @@ def dependencia_cadastro_view(request):
 @login_required
 def notificacoes_view(request):
     contadores = Notificacao.objects.filter(
-        id_usuario=request.user, lida=False
+        id_usuario=request.user.id, lida=False
     ).values('prioridade').annotate(total=Count('id'))
 
     alta_count = next((c['total'] for c in contadores if c['prioridade'] == 'Alta'), 0)
     media_count = next((c['total'] for c in contadores if c['prioridade'] == 'Média'), 0)
     baixa_count = next((c['total'] for c in contadores if c['prioridade'] == 'Baixa'), 0)
 
-    notificacoes = Notificacao.objects.filter(id_usuario=request.user).order_by('-data_hora')
+    notificacoes = Notificacao.objects.filter(id_usuario=request.user.id).order_by('-data_hora')
 
     return render(request, 'dashboard/notificacoes.html', {
         'notificacoes': notificacoes,
@@ -200,7 +194,7 @@ def notificacoes_view(request):
 
 @login_required
 def marcar_lida_view(request, pk):
-    notif = get_object_or_404(Notificacao, pk=pk, id_usuario=request.user)
+    notif = get_object_or_404(Notificacao, pk=pk, id_usuario=request.user.id)
     if request.method == 'POST':
         notif.lida = True
         notif.save()
