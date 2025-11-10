@@ -1,117 +1,751 @@
 {% extends 'base.html' %}
-{% block title %}Dependências Cadastradas | Jotanunes{% endblock %}
-{% block content %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+{% load static %}
+
+{% block title %}Dependências{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
 <style>
-    :root {
-        --bg-dark: #1e1e1e;
-        --card-bg: #2a2a2a;
-        --primary: #d40000;
-        --primary-light: #ff4444;
-        --success: #28a745;
-        --warning: #ffc107;
-        --danger: #dc3545;
-        --text: #e0e0e0;
-        --text-muted: #888;
+  :root {
+    --primary: #667eea;
+    --primary-dark: #764ba2;
+    --primary-light: rgba(102, 126, 234, 0.1);
+    --secondary: #252525;
+    --dark: #1a1a1a;
+    --light: #ddd;
+    --border: #333;
+  }
+
+  body {
+    background-color: #1e1e1e;
+    color: var(--light);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem 0;
+    border-bottom: 2px solid var(--border);
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .btn-new-dep {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-new-dep:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    color: #fff;
+  }
+
+  /* FILTRO ROXO */
+  .filter-container {
+    background: var(--secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+  }
+
+  .filter-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .filter-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .filter-toggle-icon {
+    color: #fff;
+    transition: all 0.3s;
+  }
+
+  .filter-container.collapsed .filter-toggle-icon {
+    transform: rotate(-90deg);
+  }
+
+  .filter-body {
+    max-height: 800px;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+    padding: 1.25rem;
+  }
+
+  .filter-container.collapsed .filter-body {
+    max-height: 0;
+    padding: 0 1.25rem;
+  }
+
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .filter-label {
+    color: var(--light);
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .filter-input {
+    width: 100%;
+    background-color: #2a2a2a;
+    border: 1px solid var(--border);
+    color: var(--light);
+    padding: 0.7rem 0.85rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+  }
+
+  .filter-input::placeholder {
+    color: rgba(221, 221, 221, 0.6);
+  }
+
+  .filter-input:focus {
+    border-color: var(--primary);
+    outline: none;
+    background-color: #333;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  }
+
+  .filter-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ddd' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.5rem;
+  }
+
+  .filter-select option {
+    background-color: #2a2a2a;
+    color: var(--light);
+  }
+
+  .btn-apply, .btn-clear {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    border: none;
+  }
+
+  .btn-apply {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+  }
+
+  .btn-apply:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-clear {
+    background-color: transparent;
+    border: 1px solid var(--border);
+    color: var(--light);
+  }
+
+  /* CARDS GRID COM SCROLL - LIMITE DE 5 CARDS */
+  .dependencias-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.25rem;
+    max-height: 900px;
+    overflow-y: auto;
+    padding-right: 10px;
+  }
+
+  /* Scrollbar customizada para os cards */
+  .dependencias-grid::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .dependencias-grid::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 10px;
+  }
+
+  .dependencias-grid::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+  }
+
+  .dependencias-grid::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+  }
+
+  .dep-card {
+    background: var(--secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .dep-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    border-color: var(--primary);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-tipo {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .btn-view, .btn-edit, .btn-delete {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+    background: none;
+    padding: 0;
+  }
+
+  .btn-view {
+    background: rgba(102, 126, 234, 0.2);
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .btn-view:hover {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  .btn-edit {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    border-color: #ffc107;
+  }
+
+  .btn-edit:hover {
+    background: #ffc107;
+    color: #000;
+  }
+
+  .btn-delete {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+    border-color: #dc3545;
+  }
+
+  .btn-delete:hover {
+    background: #dc3545;
+    color: #fff;
+  }
+
+  .card-body-item {
+    margin-bottom: 0.85rem;
+  }
+
+  .card-label {
+    color: var(--light);
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0.7;
+    text-transform: uppercase;
+  }
+
+  .card-value {
+    color: #fff;
+    font-size: 0.9rem;
+  }
+
+  .badge {
+    padding: 0.4rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  .badge-principal {
+    background: linear-gradient(135deg, #17a2b8, #0d6674);
+  }
+
+  .badge-dependencia {
+    background: linear-gradient(135deg, #666, #444);
+  }
+
+  .priority-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.3rem;
+  }
+
+  .badge-alta {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+  }
+
+  .badge-alta .priority-dot {
+    background: #fff;
+  }
+
+  .badge-media {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+    color: #000;
+  }
+
+  .badge-media .priority-dot {
+    background: #000;
+  }
+
+  .badge-baixa {
+    background: linear-gradient(135deg, #51cf66, #40a558);
+  }
+
+  .badge-baixa .priority-dot {
+    background: #fff;
+  }
+
+  /* HISTÓRICO DE ALTERAÇÕES */
+  .historico-scroll {
+    overflow-x: auto;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .historico-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    min-width: 600px;
+  }
+
+  .historico-table thead {
+    background: #2a2a2a;
+    position: sticky;
+    top: 0;
+  }
+
+  .historico-table thead th {
+    color: #fff;
+    font-weight: 700;
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .historico-table tbody td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .historico-table tbody tr:hover {
+    background: rgba(102, 126, 234, 0.1);
+  }
+
+  .historico-table tbody tr:nth-child(even) {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  .badge-criado {
+    background: #28a745;
+    color: #fff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .badge-alterado {
+    background: #ffc107;
+    color: #000;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /* Scrollbar customizada histórico */
+  .historico-scroll::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .historico-scroll::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 10px;
+  }
+
+  .historico-scroll::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+  }
+
+  .historico-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+  }
+
+  /* Info box */
+  .info-box {
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+    text-align: center;
+  }
+
+  .info-box p {
+    margin: 0;
+    color: var(--light);
+  }
+
+  @media (max-width: 768px) {
+    .dependencias-grid {
+      max-height: 600px;
     }
-    body { background: var(--bg-dark); color: var(--text); }
-    .dep-container { background: var(--card-bg); border-radius: 12px; padding: 2rem; box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
-    .dep-header { background: linear-gradient(135deg, var(--primary), #b30000); color: white; padding: 1.5rem; border-radius: 12px 12px 0 0; margin: -2rem -2rem 2rem -2rem; text-align: center; }
-    .table th { background: linear-gradient(135deg, var(--primary), #cc0000); color: white; }
-    .table tbody tr:hover { background: #333; transition: background 0.2s; }
-    .badge-baixa { background: var(--success); color: white; }
-    .badge-media { background: var(--warning); color: #000; }
-    .badge-alta { background: var(--danger); color: white; }
-    .code-tag { font-family: 'Courier New', monospace; font-size: 0.9rem; padding: 0.2rem 0.5rem; border-radius: 6px; }
-    .text-origin { background: #0d6efd; color: white; }
-    .text-destino { background: #198754; color: white; }
+  }
 </style>
+{% endblock %}
 
-<div class="container py-5">
-    <div class="dep-container">
-        <div class="dep-header">
-            <h1 class="mb-0">
-                <i class="bi bi-diagram-3"></i> Dependências Cadastradas
-            </h1>
-        </div>
+{% block content %}
+<div class="container-fluid px-4 py-4">
 
-        <div class="text-center mb-4">
-            <a href="{% url 'dependencia_cadastro' %}" class="btn btn-danger btn-lg">
-                + Nova Dependência
-            </a>
-        </div>
+  <div class="page-header">
+    <h1>🔗 Dependências</h1>
+    <a href="{% url 'dependencia_cadastro' %}" class="btn-new-dep">
+      <i class="fas fa-plus"></i> Nova Dependência
+    </a>
+  </div>
 
-        <div class="table-responsive">
-            <table class="table table-hover align-middle text-center">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Origem</th>
-                        <th>Destino</th>
-                        <th>Prioridade</th>
-                        <th>Criado por</th>
-                        <th>Data</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for dep in dependencias %}
-                    <tr>
-                        <td><strong>#{{ dep.id }}</strong></td>
-
-                        <td>
-                            {% if dep.origem_label %}
-                                <code class="code-tag text-origin">{{ dep.origem_label }}</code>
-                            {% else %}
-                                <span class="text-muted">—</span>
-                            {% endif %}
-                        </td>
-
-                        <td>
-                            {% if dep.destino_label %}
-                                <code class="code-tag text-destino">{{ dep.destino_label }}</code>
-                            {% else %}
-                                <span class="text-muted">—</span>
-                            {% endif %}
-                        </td>
-
-                        <td>
-                            {% if dep.prioridade_nivel %}
-                                <span class="badge 
-                                    {% if dep.prioridade_nivel == 'Alta' %}badge-alta
-                                    {% elif dep.prioridade_nivel == 'Média' %}badge-media
-                                    {% else %}badge-baixa{% endif %}">
-                                    {{ dep.prioridade_nivel }}
-                                </span>
-                            {% else %}
-                                <span class="text-muted">Sem prioridade</span>
-                            {% endif %}
-                        </td>
-
-                        <td>
-                            <i class="bi bi-person-fill"></i>
-                            {{ dep.criado_por|capfirst }}
-                        </td>
-
-                        <td title="{{ dep.data_criacao|date:'d/m/Y H:i:s' }}">
-                            {{ dep.data_criacao|date:"d/m H:i" }}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <i class="bi bi-inbox display-1 text-muted d-block mb-3"></i>
-                            <p class="text-muted">Nenhuma dependência cadastrada.</p>
-                            <a href="{% url 'dependencia_cadastro' %}" class="btn btn-outline-danger mt-3">
-                                Cadastrar a primeira
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+  <!-- FILTROS -->
+  <div class="filter-container" id="filterContainer">
+    <div class="filter-header" onclick="toggleFilters()">
+      <h3><i class="fas fa-filter"></i> 🔍 Filtros Avançados</h3>
+      <i class="fas fa-chevron-down filter-toggle-icon"></i>
     </div>
+
+    <div class="filter-body">
+      <form method="GET" id="filterForm">
+        <div class="filters-grid">
+          
+          <div class="filter-field">
+            <label class="filter-label">SQL</label>
+            <input type="text" name="sql" class="filter-input" placeholder="Buscar SQL..." value="{{ request.GET.sql }}">
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label">Report</label>
+            <input type="text" name="report" class="filter-input" placeholder="Buscar Report..." value="{{ request.GET.report }}">
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label">Fórmula</label>
+            <input type="text" name="formula" class="filter-input" placeholder="Buscar Fórmula..." value="{{ request.GET.formula }}">
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label">Usuário</label>
+            <input type="text" name="usuario" class="filter-input" placeholder="Criado por..." value="{{ request.GET.usuario }}">
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label">Prioridade</label>
+            <select name="prioridade" class="filter-input filter-select">
+              <option value="">Todas</option>
+              <option value="Alta" {% if request.GET.prioridade == 'Alta' %}selected{% endif %}>🔴 Alta</option>
+              <option value="Média" {% if request.GET.prioridade == 'Média' %}selected{% endif %}>🟡 Média</option>
+              <option value="Baixa" {% if request.GET.prioridade == 'Baixa' %}selected{% endif %}>🟢 Baixa</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label">Data</label>
+            <input type="date" name="data" class="filter-input" value="{{ request.GET.data }}">
+          </div>
+
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end">
+          <a href="{% url 'dependencias' %}" class="btn-clear">Limpar</a>
+          <button type="submit" class="btn-apply">🔍 Aplicar Filtros</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CARDS COM LIMITE DE 5 E SCROLL -->
+  {% if dependencias %}
+    <div class="dependencias-grid">
+      {% for dep in dependencias|slice:":5" %}
+      <div class="dep-card">
+        
+        <div class="card-header">
+          <div class="card-tipo">📦 Dependência</div>
+          <div class="card-actions">
+            <button class="btn-view" data-bs-toggle="modal" data-bs-target="#detalhesModal{{ dep.id }}" title="Ver detalhes">
+              <i class="fas fa-eye"></i>
+            </button>
+            <a href="{% url 'dependencia_editar' dep.id %}" class="btn-edit" title="Editar">
+              <i class="fas fa-edit"></i>
+            </a>
+            <button class="btn-delete" data-bs-toggle="modal" data-bs-target="#deleteModal{{ dep.id }}" title="Excluir">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body-item">
+          <span class="card-label">Principal</span>
+          <span class="badge badge-principal">{{ dep.principal_label|truncatewords:3 }}</span>
+        </div>
+
+        <div class="card-body-item">
+          <span class="card-label">Dependências</span>
+          {% if dep.dependencias_label and dep.dependencias_label != "—" %}
+            <span class="badge badge-dependencia">{{ dep.dependencias_label|truncatewords:3 }}</span>
+          {% else %}
+            <span style="color: var(--light); opacity: 0.5;">Nenhuma</span>
+          {% endif %}
+        </div>
+
+        <div class="card-body-item">
+          <span class="card-label">Prioridade</span>
+          {% if dep.prioridade_nivel == "Alta" %}
+            <span class="badge badge-alta">
+              <span class="priority-dot"></span>
+              Alta
+            </span>
+          {% elif dep.prioridade_nivel == "Média" %}
+            <span class="badge badge-media">
+              <span class="priority-dot"></span>
+              Média
+            </span>
+          {% elif dep.prioridade_nivel == "Baixa" %}
+            <span class="badge badge-baixa">
+              <span class="priority-dot"></span>
+              Baixa
+            </span>
+          {% else %}
+            <span style="color: var(--light); opacity: 0.5;">—</span>
+          {% endif %}
+        </div>
+
+        <div class="card-body-item">
+          <span class="card-label">Criado Por</span>
+          <span class="card-value">{{ dep.criado_por|truncatewords:2 }}</span>
+        </div>
+
+        <div class="card-body-item">
+          <span class="card-label">Data</span>
+          <span class="card-value">{{ dep.data_criacao|date:"d/m/Y" }}</span>
+        </div>
+      </div>
+
+      <!-- MODAL DE DETALHES COM HISTÓRICO -->
+      <div class="modal fade" id="detalhesModal{{ dep.id }}" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+          <div class="modal-content" style="background: var(--secondary); color: #fff;">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border: none;">
+              <h5 class="modal-title">📊 Detalhes da Dependência</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+              <!-- Informações principais -->
+              <div style="background: #2a2a2a; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid var(--primary);">
+                <p class="mb-1"><strong>Principal:</strong> {{ dep.principal_label }}</p>
+                <p class="mb-1"><strong>Dependências:</strong> {{ dep.dependencias_label }}</p>
+                <p class="mb-1"><strong>Criado Por:</strong> {{ dep.criado_por }}</p>
+                <p class="mb-0"><strong>Data:</strong> {{ dep.data_criacao|date:"d/m/Y" }}</p>
+              </div>
+
+              <!-- Prioridade -->
+              <div style="background: #2a2a2a; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #ffc107;">
+                <p class="mb-2"><strong>Prioridade:</strong></p>
+                {% if dep.prioridade_nivel == "Alta" %}
+                  <span class="badge badge-alta">
+                    <span class="priority-dot"></span>
+                    Alta
+                  </span>
+                {% elif dep.prioridade_nivel == "Média" %}
+                  <span class="badge badge-media">
+                    <span class="priority-dot"></span>
+                    Média
+                  </span>
+                {% elif dep.prioridade_nivel == "Baixa" %}
+                  <span class="badge badge-baixa">
+                    <span class="priority-dot"></span>
+                    Baixa
+                  </span>
+                {% endif %}
+              </div>
+
+              <!-- HISTÓRICO DE ALTERAÇÕES -->
+              <div style="background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+                <h6 style="color: var(--light); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fas fa-history"></i> Histórico de Alterações (Últimas 5)
+                </h6>
+
+                <div class="historico-scroll">
+                  <table class="historico-table">
+                    <thead>
+                      <tr>
+                        <th>Data/Hora</th>
+                        <th>Usuário</th>
+                        <th>Ação</th>
+                        <th>Descrição</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>{{ dep.data_criacao|date:"d/m/y H:i" }}</td>
+                        <td>{{ dep.criado_por }}</td>
+                        <td><span class="badge-criado">✓ Criado</span></td>
+                        <td>Dependência criada</td>
+                      </tr>
+                      <tr style="opacity: 0.6;">
+                        <td colspan="4" style="text-align: center; padding: 1rem;">Sem mais alterações</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer" style="border: none;">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+              <a href="{% url 'dependencia_editar' dep.id %}" class="btn btn-primary">✏️ Editar</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL DE EXCLUSÃO -->
+      <div class="modal fade" id="deleteModal{{ dep.id }}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content" style="background: var(--secondary); color: #fff;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #dc3545, #c82333); border: none;">
+              <h5 class="modal-title">⚠️ Confirmar Exclusão</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <p><strong>Tem certeza que deseja excluir esta dependência?</strong></p>
+              <div style="background: #2a2a2a; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                <p class="mb-1"><strong>Principal:</strong> {{ dep.principal_label }}</p>
+                <p class="mb-0"><strong>Dependências:</strong> {{ dep.dependencias_label }}</p>
+              </div>
+              <p style="color: #ffc107;"><strong>Atenção:</strong> Esta ação não pode ser desfeita!</p>
+            </div>
+            <div class="modal-footer" style="border: none;">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <form method="POST" action="{% url 'dependencia_excluir' dep.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Excluir</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% endfor %}
+    </div>
+
+    <!-- Contador de registros ocultos -->
+    {% if dependencias|length > 5 %}
+      <div class="info-box">
+        <p>
+          <i class="fas fa-info-circle"></i> Mostrando <strong>5 de {{ dependencias|length }}</strong> dependências. 
+          <br>
+          <span style="font-size: 0.85rem; opacity: 0.8;">Use a barra de rolagem para ver mais.</span>
+        </p>
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div class="text-center py-5" style="color: var(--light);">
+      <i class="fas fa-link" style="font-size: 3rem; opacity: 0.3;"></i>
+      <h5 class="mt-3">Nenhuma Dependência Encontrada</h5>
+      <p style="opacity: 0.7;">
+        {% if request.GET %}
+          Nenhum resultado para os filtros aplicados.
+          <br>
+          <a href="{% url 'dependencias' %}" style="color: var(--primary);">Limpar filtros</a>
+        {% else %}
+          Não há dependências cadastradas.
+        {% endif %}
+      </p>
+    </div>
+  {% endif %}
+
 </div>
+
+<script>
+function toggleFilters() {
+  document.getElementById('filterContainer').classList.toggle('collapsed');
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}

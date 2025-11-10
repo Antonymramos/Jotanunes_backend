@@ -1,435 +1,301 @@
 {% extends 'base.html' %}
-{% block title %}Cadastrar Dependência | Jotanunes{% endblock %}
+{% load static %}
+
+{% block title %}Cadastrar Dependência de Impacto{% endblock %}
+
 {% block content %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<style>
-    :root {
-        --bg-dark: #121212;
-        --card-bg: #1e1e1e;
-        --primary: #d40000;
-        --primary-light: #ff3333;
-        --text: #e0e0e0;
-        --border: #333333;
-        --shadow: 0 8px 32px rgba(0,0,0,0.4);
-        --radius: 16px;
-        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            
+            <!-- CABEÇALHO -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>📝 Cadastrar Dependência</h2>
+                <a href="{% url 'dependencias' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+            </div>
 
-    * { font-family: 'Inter', sans-serif; }
-    body { background: var(--bg-dark); color: var(--text); min-height: 100vh; }
-
-    .cadastro-wrapper { width: 100%; max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
-    .cadastro-card { background: var(--card-bg); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); animation: floatIn 0.8s ease-out; }
-    .cadastro-header { background: linear-gradient(135deg, var(--primary), #b30000); padding: 2rem; text-align: center; }
-    .cadastro-title { font-size: 2rem; font-weight: 700; margin: 0; }
-    .cadastro-title i { font-size: 2.5rem; margin-right: 0.5rem; }
-    .cadastro-body { padding: 2.5rem; }
-    .form-group { margin-bottom: 1.5rem; }
-
-    .form-label {
-        font-weight: 500;
-        color: #ff6666;
-        margin-bottom: 0.4rem;
-        display: flex;
-        align-items: center;
-        font-size: 0.85rem;
-    }
-
-    .form-label i { margin-right: 0.4rem; font-size: 1rem; }
-
-    .select-box { position: relative; background: white; border: 1px solid #ccc; border-radius: 10px; transition: var(--transition); }
-    .select-header { display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 1rem; cursor: text; min-height: 46px; background: white !important; }
-    .select-header input { border: none; outline: none; width: 100%; background: transparent; color: #000; font-size: 0.9rem; }
-    .select-header-icons { display: flex; align-items: center; gap: 0.5rem; }
-    .select-header-icons i { color: #000; font-size: 1rem; cursor: pointer; transition: transform 0.3s ease; }
-    .select-header-icons i:hover { color: var(--primary); }
-    .select-header.open i.bi-chevron-down { transform: rotate(180deg); }
-    .select-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; border-top: 1px solid #eee; background: white; border-radius: 0 0 10px 10px; position: absolute; width: 100%; z-index: 20; }
-    .select-body.open { max-height: 260px; }
-    .select-options { max-height: 240px; overflow-y: auto; }
-    .select-option { padding: 10px 14px; cursor: pointer; display: flex; align-items: center; color: #000; transition: var(--transition); }
-    .select-option:hover { background: #f8f8f8; }
-    .select-option.selected { background: var(--primary-light); color: white; }
-    .selected-items { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-    .selected-item { background: var(--primary); color: white; padding: 5px 10px; border-radius: 16px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
-    .selected-item .remove { cursor: pointer; font-weight: bold; }
-
-    .fluxo-container { display: flex; align-items: center; justify-content: center; margin: 2rem 0; }
-    .fluxo-linha { flex: 1; height: 3px; background: linear-gradient(90deg, transparent, var(--primary-light), transparent); }
-    .fluxo-seta { width: 50px; height: 50px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; margin: 0 1rem; box-shadow: 0 4px 15px rgba(212, 0, 0, 0.3); animation: pulse 2s infinite; }
-
-    .btn-cadastrar { background: linear-gradient(135deg, var(--primary-light), var(--primary)); color: white; border: none; border-radius: 50px; padding: 0.9rem 3rem; font-weight: 600; font-size: 1.1rem; box-shadow: 0 6px 20px rgba(212, 0, 0, 0.3); transition: var(--transition); min-width: 220px; }
-    .btn-cadastrar:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(212, 0, 0, 0.4); }
-
-    .add-origem, .add-destino, .remove-block {
-        width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    }
-    .add-origem, .add-destino { background: rgba(255,255,255,0.1); border: 1px solid #555; }
-    .add-origem:hover, .add-destino:hover { background: var(--primary-light); border-color: var(--primary-light); }
-
-    @keyframes floatIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-
-    @media (max-width: 768px) {
-        .cadastro-body { padding: 1.5rem; }
-        .fluxo-container { flex-direction: column; }
-        .fluxo-linha { width: 3px; height: 50px; margin: 1rem 0; }
-        .fluxo-seta { margin: 0; }
-    }
-</style>
-
-<div class="cadastro-wrapper">
-    <div class="cadastro-card">
-        <div class="cadastro-header">
-            <h1 class="cadastro-title">
-                Cadastrar Dependência
-            </h1>
-        </div>
-
-        <div class="cadastro-body">
+            <!-- MENSAGENS DE ERRO/SUCESSO -->
             {% if messages %}
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        <strong>{{ message }}</strong>
+                        {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 {% endfor %}
             {% endif %}
 
-            <form method="post" id="dependencia-form">
+            <!-- FORMULÁRIO -->
+            <form method="POST" class="needs-validation" id="formDependencia">
                 {% csrf_token %}
-                <div class="row g-4">
 
-                    <!-- ==================== ORIGEM ==================== -->
-                    <div class="col-12">
-                        <h5 class="text-light mb-3">Origem</h5>
-                        <div id="origem-container">
-                            <div class="origem-block mb-4">
-                                <div class="row g-3 align-items-end">
-                                    <div class="col-lg-6">
-                                        <label class="form-label">Tabela de Origem</label>
-                                        <select class="form-select tabela-select" data-side="origem" required>
-                                            <option value="">Selecione a tabela</option>
-                                            <option value="sql">AUD_SQL</option>
-                                            <option value="report">AUD_REPORT</option>
-                                            <option value="fv">AUD_FV</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-lg-5">
-                                        <label class="form-label">Registros de Origem</label>
-                                        <div class="select-box">
-                                            <div class="select-header">
-                                                <input type="text" class="select-input" placeholder="Pesquisar..." autocomplete="off">
-                                                <div class="select-header-icons">
-                                                    <i class="bi bi-chevron-down"></i>
-                                                </div>
-                                            </div>
-                                            <div class="select-body">
-                                                <div class="select-options"></div>
-                                            </div>
-                                        </div>
-                                        <div class="selected-items mt-2"></div>
-                                        <div class="hidden-inputs"></div>
-                                    </div>
-                                    <div class="col-lg-1 text-end">
-                                        <button type="button" class="btn btn-sm add-origem" title="Adicionar outra origem">
-                                            <i class="bi bi-plus-lg"></i>
-                                        </button>
-                                    </div>
-                                </div>
+                <!-- ============================================================================
+                     CARD 1: ITEM PRINCIPAL (SER AFETADO)
+                     ============================================================================ -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            🎯 Selecione o Item PRINCIPAL
+                        </h5>
+                        <small class="text-white-50">
+                            Este é o item que SERÁ AFETADO se alterado
+                        </small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="principal_tipo" class="form-label">
+                                    <strong>Tipo Principal:</strong>
+                                </label>
+                                <select 
+                                    name="principal_tipo" 
+                                    id="principal_tipo" 
+                                    class="form-select" 
+                                    required
+                                    onchange="atualizarPrincipal()">
+                                    <option value="">-- Selecione um tipo --</option>
+                                    <option value="sql">SQL (Sentença)</option>
+                                    <option value="report">REPORT (Relatório)</option>
+                                    <option value="fv">FÓRMULA (FV)</option>
+                                </select>
+                                <small class="text-muted d-block mt-2">
+                                    Escolha o tipo do item principal
+                                </small>
+                            </div>
+                            <div class="col-md-8">
+                                <label for="principal_id" class="form-label">
+                                    <strong>ID do Item:</strong>
+                                </label>
+                                <select 
+                                    name="principal_id" 
+                                    id="principal_id" 
+                                    class="form-select" 
+                                    required
+                                    disabled>
+                                    <option value="">-- Selecione um item --</option>
+                                </select>
+                                <small class="text-muted d-block mt-2">
+                                    Primeiro selecione o tipo
+                                </small>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- ==================== FLUXO ==================== -->
-                    <div class="col-12">
-                        <div class="fluxo-container">
-                            <div class="fluxo-linha"></div>
-                            <div class="fluxo-seta"><i class="bi bi-arrow-right"></i></div>
-                            <div class="fluxo-linha"></div>
-                        </div>
-                    </div>
-
-                    <!-- ==================== DESTINO ==================== -->
-                    <div class="col-12">
-                        <h5 class="text-light mb-3">Destino</h5>
-                        <div id="destino-container">
-                            <div class="destino-block mb-4">
-                                <div class="row g-3 align-items-end">
-                                    <div class="col-lg-6">
-                                        <label class="form-label">Tabela de Destino</label>
-                                        <select class="form-select tabela-select" data-side="destino" required>
-                                            <option value="">Selecione a tabela</option>
-                                            <option value="sql">AUD_SQL</option>
-                                            <option value="report">AUD_REPORT</option>
-                                            <option value="fv">AUD_FV</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-lg-5">
-                                        <label class="form-label">Registros de Destino</label>
-                                        <div class="select-box">
-                                            <div class="select-header">
-                                                <input type="text" class="select-input" placeholder="Pesquisar..." autocomplete="off">
-                                                <div class="select-header-icons">
-                                                    <i class="bi bi-chevron-down"></i>
-                                                </div>
-                                            </div>
-                                            <div class="select-body">
-                                                <div class="select-options"></div>
-                                            </div>
-                                        </div>
-                                        <div class="selected-items mt-2"></div>
-                                        <div class="hidden-inputs"></div>
-                                    </div>
-                                    <div class="col-lg-1 text-end">
-                                        <button type="button" class="btn btn-sm add-destino" title="Adicionar outro destino">
-                                            <i class="bi bi-plus-lg"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ==================== PRIORIDADE ==================== -->
-                    <div class="col-lg-6">
-                        <div class="form-group">
-                            <label class="form-label">Prioridade</label>
-                            <select name="id_prioridade" class="form-select">
-                                <option value="">Sem prioridade</option>
-                                {% for p in prioridades %}
-                                    <option value="{{ p.id }}">{{ p.nivel }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- ==================== BOTÕES ==================== -->
-                    <div class="col-12 text-center mt-5">
-                        <button type="submit" class="btn btn-cadastrar">
-                            Cadastrar Dependência
-                        </button>
-                        <a href="{% url 'dependencias' %}" class="btn btn-secondary ms-3">
-                            Voltar
-                        </a>
                     </div>
                 </div>
+
+                <!-- ============================================================================
+                     CARD 2: ITENS DEPENDENTES (MÚLTIPLOS)
+                     ============================================================================ -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            🔗 Selecione os Itens DEPENDENTES
+                        </h5>
+                        <small class="text-white-50">
+                            Selecione 1 ou mais itens que dependem do principal
+                        </small>
+                    </div>
+                    <div class="card-body">
+                        
+                        <!-- SQL -->
+                        <div class="mb-5">
+                            <h6 class="border-bottom pb-2">
+                                <span class="badge bg-primary">SQL</span> Sentenças
+                            </h6>
+                            <div class="list-group mt-3" style="max-height: 300px; overflow-y: auto;">
+                                {% for sql in sqls %}
+                                    <label class="list-group-item">
+                                        <input 
+                                            type="checkbox" 
+                                            name="dependencia_sql[]" 
+                                            value="{{ sql.codsentenca }}"
+                                            class="form-check-input me-2">
+                                        <strong>{{ sql.codsentenca }}</strong><br>
+                                        <small class="text-muted">{{ sql.titulo }}</small>
+                                    </label>
+                                {% empty %}
+                                    <div class="alert alert-warning mb-0">
+                                        Nenhuma SQL cadastrada
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- REPORT -->
+                        <div class="mb-5">
+                            <h6 class="border-bottom pb-2">
+                                <span class="badge bg-warning">REPORT</span> Relatórios
+                            </h6>
+                            <div class="list-group mt-3" style="max-height: 300px; overflow-y: auto;">
+                                {% for report in reports %}
+                                    <label class="list-group-item">
+                                        <input 
+                                            type="checkbox" 
+                                            name="dependencia_report[]" 
+                                            value="{{ report.id }}"
+                                            class="form-check-input me-2">
+                                        <strong>REP {{ report.id }}</strong><br>
+                                        <small class="text-muted">{{ report.codigo }}</small>
+                                    </label>
+                                {% empty %}
+                                    <div class="alert alert-warning mb-0">
+                                        Nenhum Report cadastrado
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- FÓRMULA -->
+                        <div class="mb-5">
+                            <h6 class="border-bottom pb-2">
+                                <span class="badge bg-info">FÓRMULA</span> Fórmulas/Visões
+                            </h6>
+                            <div class="list-group mt-3" style="max-height: 300px; overflow-y: auto;">
+                                {% for fv in fvs %}
+                                    <label class="list-group-item">
+                                        <input 
+                                            type="checkbox" 
+                                            name="dependencia_fv[]" 
+                                            value="{{ fv.id }}"
+                                            class="form-check-input me-2">
+                                        <strong>FV {{ fv.id }}</strong><br>
+                                        <small class="text-muted">{{ fv.nome }}</small>
+                                    </label>
+                                {% empty %}
+                                    <div class="alert alert-warning mb-0">
+                                        Nenhuma Fórmula cadastrada
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Dica:</strong> Selecione pelo menos 1 dependente para salvar
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================================
+                     CARD 3: PRIORIDADE
+                     ============================================================================ -->
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">⚠️ Nível de Prioridade</h5>
+                    </div>
+                    <div class="card-body">
+                        <label for="id_prioridade" class="form-label">
+                            <strong>Qual o nível de impacto?</strong>
+                        </label>
+                        <select 
+                            name="id_prioridade" 
+                            id="id_prioridade" 
+                            class="form-select">
+                            <option value="">-- Sem Prioridade --</option>
+                            {% for prioridade in prioridades %}
+                                <option value="{{ prioridade.id }}">
+                                    {{ prioridade.nivel }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted d-block mt-2">
+                            Indica a importância da dependência
+                        </small>
+                    </div>
+                </div>
+
+                <!-- ============================================================================
+                     BOTÕES DE AÇÃO
+                     ============================================================================ -->
+                <div class="d-flex gap-2 mb-5">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-save"></i> Salvar Dependência
+                    </button>
+                    <a href="{% url 'dependencias' %}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+
             </form>
+
         </div>
     </div>
 </div>
 
-<!-- DADOS OCULTOS -->
-<div style="display:none;">
-    <div id="data-sql">
-        {% for sql in sqls %}
-            <div class="option" 
-                 data-id="{{ sql.codsentenca }}" 
-                 data-text="{{ sql.codsentenca }} - {{ sql.titulo|default:'Sem título' }}">
-                {{ sql.codsentenca }} - {{ sql.titulo|default:'Sem título' }}
-            </div>
-        {% endfor %}
-    </div>
-    <div id="data-report">
-        {% for rep in reports %}
-            <div class="option" 
-                 data-id="{{ rep.id }}" 
-                 data-text="{{ rep.id }} - {{ rep.codigo }} - {{ rep.descricao|default:'Sem descrição' }}">
-                {{ rep.id }} - {{ rep.codigo }} - {{ rep.descricao|default:'Sem descrição' }}
-            </div>
-        {% endfor %}
-    </div>
-    <div id="data-fv">
-        {% for fv in fvs %}
-            <div class="option" 
-                 data-id="{{ fv.id }}" 
-                 data-text="{{ fv.id }} - {{ fv.nome }} - {{ fv.descricao|default:'Sem descrição' }}">
-                {{ fv.id }} - {{ fv.nome }} - {{ fv.descricao|default:'Sem descrição' }}
-            </div>
-        {% endfor %}
-    </div>
-</div>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- SCRIPT JAVASCRIPT -->
 <script>
-$(function() {
-    const data = {
-        sql: $('#data-sql .option').map(function() {
-            const id = $(this).attr('data-id').trim();
-            const text = $(this).attr('data-text') || $(this).text().trim();
-            if (!id) return null;
-            return { id, text };
-        }).get(),
+// Dados dos itens (passados do Django)
+const sqls = {{ sqls|safe }};
+const reports = {{ reports|safe }};
+const fvs = {{ fvs|safe }};
 
-        report: $('#data-report .option').map(function() {
-            const id = parseInt($(this).attr('data-id'), 10);
-            const text = $(this).attr('data-text') || $(this).text().trim();
-            if (isNaN(id)) return null;
-            return { id, text };
-        }).get(),
-
-        fv: $('#data-fv .option').map(function() {
-            const id = parseInt($(this).attr('data-id'), 10);
-            const text = $(this).attr('data-text') || $(this).text().trim();
-            if (isNaN(id)) return null;
-            return { id, text };
-        }).get()
-    };
-
-    function createSelectBlock($block) {
-        const side = $block.hasClass('origem-block') ? 'origem' : 'destino';
-        const $tabela = $block.find('.tabela-select');
-        const $header = $block.find('.select-header');
-        const $input = $block.find('.select-input');
-        const $body = $block.find('.select-body');
-        const $options = $block.find('.select-options');
-        const $selected = $block.find('.selected-items');
-        const $hidden = $block.find('.hidden-inputs');
-
-        let items = [];
-        let selectedItems = [];
-
-        function renderOptions() {
-            $options.empty();
-            const term = $input.val().toLowerCase();
-            const filtered = items.filter(item => 
-                item.text.toLowerCase().includes(term) && 
-                !selectedItems.some(s => s.id === item.id)
-            );
-
-            if (filtered.length === 0) {
-                const msg = items.length === 0 ? 'Nenhum registro' : 'Nada encontrado';
-                $options.append(`<div class="p-3 text-muted text-center">${msg}</div>`);
-                return;
-            }
-
-            filtered.forEach(item => {
-                $options.append(
-                    `<div class="select-option" data-id="${item.id}">${item.text}</div>`
-                );
-            });
-        }
-
-        function renderSelected() {
-            $selected.empty();
-            selectedItems.forEach(item => {
-                $selected.append(
-                    `<div class="selected-item">
-                        <span>${item.text}</span>
-                        <span class="remove" data-id="${item.id}">×</span>
-                    </div>`
-                );
-            });
-            updateHiddenInputs();
-        }
-
-        function updateHiddenInputs() {
-            const tabela = $tabela.val();
-            $hidden.empty();
-            if (!tabela || selectedItems.length === 0) return;
-
-            const campo = `id_aud_${tabela}`;
-            selectedItems.forEach(item => {
-                $hidden.append(`<input type="hidden" name="${campo}[]" value="${item.id}">`);
-            });
-        }
-
-        $header.on('click', function(e) {
-            if ($(e.target).hasClass('remove')) return;
-            e.stopPropagation();
-            $('.select-body').removeClass('open');
-            $('.select-header').removeClass('open');
-            $body.toggleClass('open');
-            $header.toggleClass('open');
-            $input.focus();
-            renderOptions();
-        });
-
-        $input.on('input focus', renderOptions);
-
-        $options.on('click', '.select-option', function(e) {
-            e.stopPropagation();
-            const id = $(this).data('id');
-            const item = items.find(i => i.id === id);
-            if (item && !selectedItems.some(s => s.id === id)) {
-                selectedItems.push(item);
-                renderSelected();
-                renderOptions();
-                $input.val('');
-            }
-            $body.removeClass('open');
-            $header.removeClass('open');
-        });
-
-        $selected.on('click', '.remove', function(e) {
-            e.stopPropagation();
-            const id = parseInt($(this).data('id'), 10);
-            selectedItems = selectedItems.filter(s => s.id !== id);
-            renderSelected();
-            renderOptions();
-        });
-
-        $tabela.on('change', function() {
-            const tabela = this.value;
-            items = data[tabela] || [];
-            selectedItems = [];
-            $input.attr('placeholder', items.length > 0 ? 'Pesquisar...' : 'Nenhum registro');
-            renderSelected();
-            renderOptions();
-        });
-
-        if ($tabela.val()) $tabela.trigger('change');
+// Função para atualizar o seletor de ID baseado no tipo selecionado
+function atualizarPrincipal() {
+    const tipo = document.getElementById('principal_tipo').value;
+    const selectId = document.getElementById('principal_id');
+    
+    // Limpa todas as opções
+    selectId.innerHTML = '<option value="">-- Selecione um item --</option>';
+    
+    // Desabilita se não houver tipo selecionado
+    if (!tipo) {
+        selectId.disabled = true;
+        return;
     }
-
-    $('.origem-block, .destino-block').each(function() {
-        createSelectBlock($(this));
-    });
-
-    function addBlock(type) {
-        const $container = $(`#${type}-container`);
-        const $template = $container.find(`.${type}-block`).first().clone();
-
-        $template.find('select').val('');
-        $template.find('.select-input').val('');
-        $template.find('.selected-items').empty();
-        $template.find('.hidden-inputs').empty();
-
-        const $removeBtn = $(`
-            <button type="button" class="btn btn-sm btn-outline-danger remove-block ms-2" title="Remover">
-                <i class="bi bi-trash"></i>
-            </button>
-        `);
-        $template.find('.col-lg-1').append($removeBtn);
-
-        $container.append($template);
-        createSelectBlock($template);
+    
+    selectId.disabled = false;
+    
+    // Preenche baseado no tipo
+    let items = [];
+    if (tipo === 'sql') {
+        items = sqls;
+    } else if (tipo === 'report') {
+        items = reports;
+    } else if (tipo === 'fv') {
+        items = fvs;
     }
-
-    $(document).on('click', '.add-origem', () => addBlock('origem'));
-    $(document).on('click', '.add-destino', () => addBlock('destino'));
-
-    $(document).on('click', '.remove-block', function() {
-        const $block = $(this).closest('.mb-4');
-        const container = $block.parent().attr('id');
-        if ($(`#${container} .mb-4`).length > 1) {
-            $block.remove();
-        } else {
-            alert('Pelo menos um bloco é obrigatório.');
+    
+    // Adiciona opções
+    items.forEach(item => {
+        const option = document.createElement('option');
+        if (tipo === 'sql') {
+            option.value = item.codsentenca;
+            option.textContent = `${item.codsentenca} - ${item.titulo}`;
+        } else if (tipo === 'report') {
+            option.value = item.id;
+            option.textContent = `${item.id} - ${item.codigo}`;
+        } else if (tipo === 'fv') {
+            option.value = item.id;
+            option.textContent = `${item.id} - ${item.nome}`;
         }
+        selectId.appendChild(option);
     });
+}
 
-    $('#dependencia-form').on('submit', function(e) {
-        const origens = $('#origem-container input[name^="id_aud_"]').length;
-        const destinos = $('#destino-container input[name^="id_aud_"]').length;
-
-        if (origens === 0 || destinos === 0) {
-            e.preventDefault();
-            alert('Selecione pelo menos 1 origem e 1 destino.');
-        }
-    });
+// Validação do formulário
+document.getElementById('formDependencia').addEventListener('submit', function(e) {
+    // Valida principal
+    const principalTipo = document.getElementById('principal_tipo').value;
+    const principalId = document.getElementById('principal_id').value;
+    
+    if (!principalTipo || !principalId) {
+        e.preventDefault();
+        alert('❌ Selecione um item principal!');
+        return;
+    }
+    
+    // Valida dependentes
+    const checkboxes = document.querySelectorAll(
+        'input[name^="dependencia_"][type="checkbox"]:checked'
+    );
+    
+    if (checkboxes.length === 0) {
+        e.preventDefault();
+        alert('❌ Selecione pelo menos 1 dependente!');
+        return;
+    }
 });
 </script>
+
 {% endblock %}

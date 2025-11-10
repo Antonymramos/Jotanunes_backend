@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Alerta | Jotanunes</title>
-
+    <title>{% block title %}Login - Dependências de Impacto{% endblock %}</title>
+    <link rel="icon" href="{% static 'img/favicon.png' %}" type="image/x-icon">
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Ícones -->
@@ -23,8 +23,6 @@
             position: relative;
             font-family: 'Poppins', sans-serif;
             overflow: hidden;
-
-            /* Ajuste principal: puxa a imagem um pouco para cima para mostrar o texto de baixo */
             background-position: center 73%;
         }
 
@@ -90,16 +88,21 @@
             background-color: #f8f9fa;
         }
 
+        .alert {
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
         /* Responsividade */
         @media (max-width: 992px) {
             body {
-                background-position: center 70%; /* Mostra mais o texto de baixo em telas médias */
+                background-position: center 70%;
             }
         }
 
         @media (max-width: 768px) {
             body {
-                background-position: center 75%; /* Em mobile, puxa ainda mais para baixo */
+                background-position: center 75%;
             }
             .login-container {
                 max-width: 90%;
@@ -108,7 +111,7 @@
 
         @media (max-width: 480px) {
             body {
-                background-position: center 78%; /* Celular pequeno: garante que "Jotanunes" apareça */
+                background-position: center 78%;
             }
         }
     </style>
@@ -118,21 +121,51 @@
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">
-                Sistema de Alerta<br>Jotanunes
+                📊 Dependências de Impacto<br>
+                <small style="font-size: 0.8rem; opacity: 0.9;">Sistema de Alerta Jotanunes</small>
             </div>
             <div class="login-body">
-                <form method="POST">
+                
+                <!-- MENSAGEM DE ERRO -->
+                {% if erro %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-circle"></i> {{ erro }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endif %}
+
+                <!-- FORMULÁRIO DE LOGIN -->
+                <form method="POST" novalidate>
                     {% csrf_token %}
+                    
+                    <!-- USERNAME -->
                     <div class="mb-3 input-group">
-                        <span class="input-group-text"><i class="bi bi-person"></i></span>
-                        <input type="text" name="username" class="form-control" placeholder="Usuário" required>
+                        <span class="input-group-text">
+                            <i class="bi bi-person"></i>
+                        </span>
+                        <input 
+                            type="text" 
+                            name="username" 
+                            class="form-control" 
+                            placeholder="Usuário" 
+                            required
+                            autofocus>
                     </div>
 
+                    <!-- PASSWORD -->
                     <div class="mb-4 input-group">
-                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                        <input type="password" name="password" class="form-control" placeholder="Senha" required>
+                        <span class="input-group-text">
+                            <i class="bi bi-lock"></i>
+                        </span>
+                        <input 
+                            type="password" 
+                            name="password" 
+                            class="form-control" 
+                            placeholder="Senha" 
+                            required>
                     </div>
 
+                    <!-- BOTÃO LOGIN -->
                     <button type="submit" class="btn-login">
                         Entrar <i class="bi bi-arrow-right-short"></i>
                     </button>
@@ -140,5 +173,8 @@
             </div>
         </div>
     </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

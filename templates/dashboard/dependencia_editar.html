@@ -1,0 +1,741 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Dependência{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+<style>
+  :root {
+    --primary: #667eea;
+    --primary-dark: #764ba2;
+    --primary-light: rgba(102, 126, 234, 0.1);
+    --secondary: #252525;
+    --dark: #1e1e1e;
+    --light: #ddd;
+    --border: #333;
+  }
+
+  body {
+    background-color: #1e1e1e;
+    color: var(--light);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  /* ===== CONTAINER MAIOR ===== */
+  .container-fluid {
+    max-width: 100% !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .page-header h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  /* ===== CARDS EXPANDIDOS ===== */
+  .editor-card {
+    background: var(--secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 1.5rem;
+    width: 100%;
+  }
+
+  .editor-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    border-color: var(--primary);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-tipo {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .card-body-item {
+    margin-bottom: 1rem;
+  }
+
+  .card-label {
+    color: var(--light);
+    font-size: 0.8rem;
+    font-weight: 600;
+    opacity: 0.7;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-value {
+    color: #fff;
+    font-size: 1rem;
+  }
+
+  .form-control,
+  .form-select {
+    background-color: #2a2a2a;
+    border: 1px solid var(--border);
+    color: var(--light);
+    border-radius: 6px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .form-control::placeholder {
+    color: rgba(221, 221, 221, 0.6);
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    background-color: #2a2a2a !important;
+    border-color: var(--primary);
+    box-shadow: 0 0 8px var(--primary);
+    color: #fff;
+    outline: none;
+  }
+
+  input[readonly] {
+    background-color: #2a2a2a !important;
+    color: #fff !important;
+    border: 1px solid var(--primary) !important;
+  }
+
+  .btn-view, .btn-edit, .btn-delete {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1rem;
+    background: none;
+    padding: 0;
+  }
+
+  .btn-view {
+    background: rgba(102, 126, 234, 0.2);
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .btn-view:hover {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  .btn-edit {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    border-color: #ffc107;
+  }
+
+  .btn-edit:hover {
+    background: #ffc107;
+    color: #000;
+  }
+
+  .btn-outline-primary {
+    border-color: var(--primary);
+    color: var(--primary);
+    font-weight: 600;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-outline-primary:hover,
+  .btn-outline-primary:focus {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border-color: var(--primary-dark);
+    box-shadow: 0 0 12px var(--primary);
+  }
+
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-salvar {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    font-weight: 700;
+    padding: 1rem 0;
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+    transition: background 0.3s ease;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+
+  .btn-salvar:hover,
+  .btn-salvar:focus {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    box-shadow: 0 6px 25px rgba(118, 75, 162, 0.7);
+  }
+
+  .btn-voltar {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 1rem;
+  }
+
+  .btn-voltar:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+  }
+
+  .dependencia-chip {
+    background: #2a2a2a;
+    color: var(--primary);
+    border-radius: 22px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 1.4rem;
+    margin-bottom: 0.8rem;
+    margin-right: 0.8rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    gap: 0.8rem;
+    border: 1px solid var(--primary);
+  }
+
+  .dependencia-chip button {
+    background: none;
+    border: none;
+    color: #bbd2ff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: color 0.25s ease-in-out;
+    padding: 0;
+  }
+
+  .dependencia-chip button:hover {
+    color: var(--primary-dark);
+  }
+
+  /* ===== MODAIS AUMENTADOS ===== */
+  .modal-content {
+    background-color: var(--secondary);
+    color: var(--light);
+    border-radius: 12px;
+  }
+
+  .modal-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-bottom: none;
+    color: #fff;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .modal-title {
+    font-weight: 700;
+    color: #fff;
+    font-size: 1.2rem;
+  }
+
+  .modal-footer {
+    border-top: 1px solid var(--border);
+    padding: 1.25rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  /* ===== MODAL DIALOG EXPANDIDO ===== */
+  .modal-dialog-expandido {
+    max-width: 90% !important;
+    width: 90vw !important;
+  }
+
+  @media (max-width: 1600px) {
+    .modal-dialog-expandido {
+      max-width: 85% !important;
+      width: 85vw !important;
+    }
+  }
+
+  @media (max-width: 1200px) {
+    .modal-dialog-expandido {
+      max-width: 80% !important;
+      width: 80vw !important;
+    }
+  }
+
+  @media (max-width: 992px) {
+    .modal-dialog-expandido {
+      max-width: 95% !important;
+      width: 95vw !important;
+    }
+  }
+
+  .list-group-item {
+    background-color: var(--dark) !important;
+    color: #fff !important;
+    border: none;
+    cursor: pointer;
+    padding: 1rem 1.2rem;
+    transition: all 0.3s;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+  }
+
+  .list-group-item:hover {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+    color: #fff;
+    font-weight: 700;
+    transform: translateX(5px);
+  }
+
+  .list-group-item.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+    color: #fff;
+    font-weight: 700;
+    border-color: var(--primary) !important;
+  }
+
+  .list-group-item.text-muted {
+    color: rgba(221, 221, 221, 0.6) !important;
+  }
+
+  .code-snippet {
+    background: #2d3436;
+    color: #fff;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    word-break: break-all;
+  }
+
+  .footer-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ===== RESPONSIVIDADE ===== */
+  @media (max-width: 1200px) {
+    .container-fluid {
+      padding-left: 1.5rem !important;
+      padding-right: 1.5rem !important;
+    }
+
+    .editor-card {
+      padding: 1.2rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .container-fluid {
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+
+    .page-header h1 {
+      font-size: 1.5rem;
+    }
+
+    .footer-actions {
+      flex-direction: column-reverse;
+    }
+
+    .btn-salvar {
+      order: 1;
+    }
+
+    .editor-card {
+      padding: 1rem;
+    }
+
+    .card-header {
+      flex-wrap: wrap;
+    }
+
+    .dependencia-chip {
+      margin-right: 0.5rem;
+      padding: 0.5rem 1rem;
+    }
+
+    .modal-dialog-expandido {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <div class="page-header">
+    <h1><i class="fas fa-edit"></i> Editar Dependência</h1>
+  </div>
+
+  <form method="POST" id="formDependencia">
+    {% csrf_token %}
+    <input type="hidden" id="dependencias_json" name="dependencias_json" />
+
+    <!-- ITEM PRINCIPAL CARD -->
+    <div class="editor-card">
+      <div class="card-header">
+        <div class="card-tipo"><i class="fas fa-database"></i> ITEM PRINCIPAL</div>
+        <div class="card-actions">
+          <button type="button" class="btn-view" title="Visualizar item principal">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body-item">
+        <span class="card-label">Tabela/Objeto</span>
+        <div class="d-flex gap-3 flex-wrap align-items-center mt-2">
+          <input 
+            id="principalInput" 
+            type="text" 
+            class="form-control code-snippet" 
+            value="{{ principal_label|default:'Nenhum' }}" 
+            readonly 
+            style="flex: 1; min-width: 300px; color: #fff !important;"
+          />
+          <button 
+            type="button" 
+            class="btn btn-edit"
+            id="btnAlterarPrincipal"
+            {% if principal_tipo == 'tabela' %}disabled title="Tabelas não podem ser alteradas"{% endif %}
+          >
+            <i class="fas fa-edit"></i>
+          </button>
+        </div>
+        <small class="text-muted d-block mt-2">
+          {% if principal_tipo == 'tabela' %}
+            <i class="fas fa-lock"></i> Item principal bloqueado (é uma tabela)
+          {% endif %}
+        </small>
+      </div>
+    </div>
+
+    <!-- MODAL: SELECIONAR ITEM PRINCIPAL -->
+    <div class="modal fade" id="modalPrincipal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-expandido modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-search"></i> Selecionar Tabela Principal</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="text" id="searchPrincipal" class="form-control mb-3" placeholder="🔍 Buscar..." autocomplete="off" />
+            <ul class="list-group" id="listaPrincipal"></ul>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEPENDÊNCIAS CARD -->
+    <div class="editor-card">
+      <div class="card-header">
+        <div class="card-tipo"><i class="fas fa-link"></i> DEPENDÊNCIAS</div>
+      </div>
+
+      <div class="mb-3">
+        <button type="button" class="btn btn-outline-primary btn-sm me-2 mb-2" onclick="abrirModalDep('sql')">
+          <i class="fas fa-database"></i> Adicionar SQL
+        </button>
+        <button type="button" class="btn btn-outline-primary btn-sm me-2 mb-2" onclick="abrirModalDep('relatorio')">
+          <i class="fas fa-file-alt"></i> Adicionar Relatório
+        </button>
+        <button type="button" class="btn btn-outline-primary btn-sm mb-2" onclick="abrirModalDep('formula')">
+          <i class="fas fa-superscript"></i> Adicionar Fórmula
+        </button>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+        <div id="sql-list" style="width: 100%;"></div>
+        <div id="relatorio-list" style="width: 100%;"></div>
+        <div id="formula-list" style="width: 100%;"></div>
+      </div>
+
+      <div id="noDependenciesMsg" class="text-muted mt-3" style="display: none;">
+        <i class="fas fa-info-circle"></i> Nenhuma dependência adicionada
+      </div>
+    </div>
+
+    <!-- MODAL: SELECIONAR DEPENDÊNCIA (EXPANDIDO) -->
+    <div class="modal fade" id="modalDep" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-expandido modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-plus"></i> Selecionar Dependência</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="text" id="searchDep" class="form-control mb-3" placeholder="🔍 Buscar..." autocomplete="off" />
+            <ul class="list-group" id="listaDep"></ul>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIORIDADE CARD -->
+    <div class="editor-card">
+      <div class="card-header">
+        <div class="card-tipo"><i class="fas fa-exclamation-triangle"></i> PRIORIDADE</div>
+      </div>
+      <div class="card-body-item">
+        <select name="prioridade" class="form-select" required>
+          <option value="">Selecionar prioridade...</option>
+          <option value="Alta" {% if dependencia.idprioridade.nivel == 'Alta' %}selected{% endif %}>
+            <i class="fas fa-arrow-up"></i> Alta
+          </option>
+          <option value="Média" {% if dependencia.idprioridade.nivel == 'Média' %}selected{% endif %}>
+            <i class="fas fa-minus"></i> Média
+          </option>
+          <option value="Baixa" {% if dependencia.idprioridade.nivel == 'Baixa' %}selected{% endif %}>
+            <i class="fas fa-arrow-down"></i> Baixa
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- OBSERVAÇÕES CARD -->
+    <div class="editor-card">
+      <div class="card-header">
+        <div class="card-tipo"><i class="fas fa-sticky-note"></i> OBSERVAÇÕES</div>
+      </div>
+      <div class="card-body-item">
+        <textarea 
+          name="observacoes" 
+          class="form-control" 
+          rows="5" 
+          placeholder="Adicione observações importantes sobre esta dependência..."
+        >{{ dependencia.observacoes|default:'' }}</textarea>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer-actions">
+      <a href="{% url 'dependencias' %}" class="btn-voltar">
+        <i class="fas fa-arrow-left"></i> Voltar
+      </a>
+      <button type="submit" class="btn-salvar">
+        <i class="fas fa-save"></i> Salvar Alterações
+      </button>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Dados vindos do backend (JSON seguro)
+  const tabelasPrincipais = {{ tabelas_principais|safe }};
+  const dadosDependencias = {{ dependencias_disponiveis|safe }};
+  let dependencias = {{ dependencias_atuais|safe }};
+
+  console.log('=== DADOS DO BACKEND ===');
+  console.log('Tabelas Principais:', tabelasPrincipais);
+  console.log('Dependências Disponíveis:', dadosDependencias);
+  console.log('Dependências Atuais:', dependencias);
+
+  // Inicializar modais
+  const modalPrincipal = new bootstrap.Modal(document.getElementById('modalPrincipal'), { backdrop: 'static' });
+  const modalDep = new bootstrap.Modal(document.getElementById('modalDep'), { backdrop: 'static' });
+
+  // ===== EVENTO: Botão Alterar Principal =====
+  document.getElementById('btnAlterarPrincipal').addEventListener('click', function(e) {
+    e.preventDefault();
+    if (!this.disabled) {
+      popularListaPrincipal(tabelasPrincipais);
+      modalPrincipal.show();
+    }
+  });
+
+  // ===== FUNÇÃO: Popular Lista Principal =====
+  function popularListaPrincipal(tabelas) {
+    const lista = document.getElementById('listaPrincipal');
+    lista.innerHTML = '';
+    
+    if (!tabelas || tabelas.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'list-group-item text-muted';
+      li.textContent = 'Nenhuma tabela disponível';
+      lista.appendChild(li);
+      return;
+    }
+
+    tabelas.forEach(tabela => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item';
+      li.textContent = tabela;
+      li.style.cursor = 'pointer';
+      li.onclick = () => {
+        document.getElementById('principalInput').value = tabela;
+        modalPrincipal.hide();
+      };
+      lista.appendChild(li);
+    });
+  }
+
+  // ===== EVENTO: Buscar Principal =====
+  document.getElementById('searchPrincipal').addEventListener('input', function() {
+    const filtro = this.value.toLowerCase();
+    document.querySelectorAll('#listaPrincipal li').forEach(item => {
+      const match = item.textContent.toLowerCase().includes(filtro);
+      item.style.display = match ? '' : 'none';
+    });
+  });
+
+  // ===== FUNÇÃO: Abrir Modal Dependência =====
+  function abrirModalDep(tipo) {
+    console.log('🔵 Abrindo modal para tipo:', tipo);
+    const nomes = { 'sql': 'SQL', 'relatorio': 'Relatório', 'formula': 'Fórmula/Visão' };
+    document.querySelector('#modalDep .modal-title').innerHTML = `<i class="fas fa-plus"></i> Selecionar ${nomes[tipo]}`;
+    
+    const lista = document.getElementById('listaDep');
+    lista.innerHTML = '';
+
+    const deps = dadosDependencias[tipo] || [];
+    console.log(`📋 Dependências de ${tipo}:`, deps);
+
+    if (!deps || deps.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'list-group-item text-muted';
+      li.textContent = `Nenhum(a) ${nomes[tipo].toLowerCase()} disponível`;
+      lista.appendChild(li);
+      console.warn(`⚠️ Nenhum item de tipo "${tipo}" encontrado`);
+    } else {
+      deps.forEach(dep => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = `<strong>${dep.id}</strong> - ${dep.label}`;
+        li.style.cursor = 'pointer';
+        li.dataset.tipo = tipo;
+        li.dataset.id = dep.id;
+        li.onclick = () => {
+          if (dependencias.some(d => d.tipo === tipo && d.iddependente == dep.id)) {
+            alert('⚠️ Este item já foi adicionado');
+            return;
+          }
+          dependencias.push({ tipo: tipo, iddependente: String(dep.id), label: dep.label });
+          renderList(tipo);
+          updateHidden();
+          updateNoMsg();
+          modalDep.hide();
+        };
+        lista.appendChild(li);
+      });
+    }
+
+    document.getElementById('searchDep').value = '';
+    modalDep.show();
+  }
+
+  // ===== EVENTO: Buscar Dependência =====
+  document.getElementById('searchDep').addEventListener('input', function() {
+    const filtro = this.value.toLowerCase();
+    document.querySelectorAll('#listaDep li').forEach(item => {
+      if (item.classList.contains('text-muted')) return;
+      const match = item.textContent.toLowerCase().includes(filtro);
+      item.style.display = match ? '' : 'none';
+    });
+  });
+
+  // ===== FUNÇÃO: Remover Dependência =====
+  function removeDep(button) {
+    const chip = button.parentNode;
+    const tipo = chip.dataset.tipo;
+    const id = chip.dataset.id;
+    dependencias = dependencias.filter(d => !(d.tipo === tipo && d.iddependente == id));
+    renderList(tipo);
+    updateHidden();
+    updateNoMsg();
+  }
+
+  // ===== FUNÇÃO: Renderizar Lista =====
+  function renderList(tipo) {
+    const list = document.getElementById(tipo + '-list');
+    list.innerHTML = '';
+    const filtered = dependencias.filter(d => d.tipo === tipo);
+    
+    filtered.forEach(d => {
+      const chip = document.createElement('div');
+      chip.className = 'dependencia-chip';
+      chip.dataset.tipo = d.tipo;
+      chip.dataset.id = d.iddependente;
+      chip.title = d.label || `${d.tipo}: ${d.iddependente}`;
+      chip.innerHTML = `
+        <span><strong>${d.iddependente}</strong> - ${d.label || ''}</span>
+        <button type="button" onclick="removeDep(this)" style="background: none; border: none;">✕</button>
+      `;
+      list.appendChild(chip);
+    });
+  }
+
+  // ===== FUNÇÃO: Atualizar JSON Oculto =====
+  function updateHidden() {
+    document.getElementById('dependencias_json').value = JSON.stringify(dependencias);
+    console.log('📝 JSON atualizado:', dependencias);
+  }
+
+  // ===== FUNÇÃO: Mostrar/Ocultar Mensagem =====
+  function updateNoMsg() {
+    document.getElementById('noDependenciesMsg').style.display = dependencias.length > 0 ? 'none' : 'block';
+  }
+
+  // ===== INICIALIZAR =====
+  window.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Página inicializada');
+    renderList('sql');
+    renderList('relatorio');
+    renderList('formula');
+    updateHidden();
+    updateNoMsg();
+  });
+</script>
+{% endblock %}

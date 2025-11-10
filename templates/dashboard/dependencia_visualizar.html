@@ -1,0 +1,599 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dependências{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+<style>
+  :root {
+    --primary: #667eea;
+    --primary-dark: #764ba2;
+    --primary-light: rgba(102, 126, 234, 0.1);
+    --secondary: #252525;
+    --dark: #1e1e1e;
+    --light: #ddd;
+    --border: #333;
+  }
+
+  body {
+    background-color: #1e1e1e;
+    color: var(--light);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .container-fluid {
+    max-width: 100% !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  /* FILTRO ROXO */
+  .filter-container {
+    background: var(--secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+  }
+
+  .filter-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .filter-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .filter-toggle-icon {
+    color: #fff;
+    transition: all 0.3s;
+  }
+
+  .filter-container.collapsed .filter-toggle-icon {
+    transform: rotate(-90deg);
+  }
+
+  .filter-body {
+    max-height: 800px;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+    padding: 1.25rem;
+  }
+
+  .filter-container.collapsed .filter-body {
+    max-height: 0;
+    padding: 0 1.25rem;
+  }
+
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .filter-label {
+    color: var(--light);
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .filter-input {
+    width: 100%;
+    background-color: #2a2a2a;
+    border: 1px solid var(--border);
+    color: var(--light);
+    padding: 0.7rem 0.85rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+  }
+
+  .filter-input::placeholder {
+    color: rgba(221, 221, 221, 0.6);
+  }
+
+  .filter-input:focus {
+    border-color: var(--primary);
+    outline: none;
+    background-color: #333;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  }
+
+  .filter-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ddd' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.5rem;
+  }
+
+  .filter-select option {
+    background-color: #2a2a2a;
+    color: var(--light);
+  }
+
+  .btn-apply, .btn-clear {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    border: none;
+  }
+
+  .btn-apply {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+  }
+
+  .btn-apply:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-clear {
+    background-color: transparent;
+    border: 1px solid var(--border);
+    color: var(--light);
+  }
+
+  .btn-clear:hover {
+    background-color: var(--secondary);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  /* CARDS GRID */
+  .dependencias-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .dependencia-card {
+    background: var(--secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .dependencia-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    border-color: var(--primary);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-tipo {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .btn-view, .btn-edit, .btn-delete {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+    background: none;
+    padding: 0;
+  }
+
+  .btn-view {
+    background: rgba(102, 126, 234, 0.2);
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .btn-view:hover {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  .btn-edit {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    border-color: #ffc107;
+  }
+
+  .btn-edit:hover {
+    background: #ffc107;
+    color: #000;
+  }
+
+  .btn-delete {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+    border-color: #dc3545;
+  }
+
+  .btn-delete:hover {
+    background: #dc3545;
+    color: #fff;
+  }
+
+  .card-body-item {
+    margin-bottom: 0.85rem;
+  }
+
+  .card-label {
+    color: var(--light);
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0.7;
+    text-transform: uppercase;
+  }
+
+  .card-value {
+    color: #fff;
+    font-size: 0.9rem;
+  }
+
+  .code-snippet {
+    background: #2d3436;
+    color: #00ff88;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    word-break: break-all;
+    max-height: 60px;
+    overflow-y: auto;
+  }
+
+  .badge {
+    padding: 0.4rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  .badge-alta {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: #fff;
+  }
+
+  .badge-media {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+    color: #000;
+  }
+
+  .badge-baixa {
+    background: linear-gradient(135deg, #51cf66, #40a558);
+    color: #fff;
+  }
+
+  /* MODAL */
+  .modal-content {
+    background-color: var(--secondary);
+    color: var(--light);
+    border-radius: 12px;
+  }
+
+  .modal-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border: none;
+    color: #fff;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+  }
+
+  .modal-title {
+    font-weight: 700;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .info-box {
+    background: #2a2a2a;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border-left: 4px solid var(--primary);
+  }
+
+  .info-box p {
+    margin-bottom: 0.5rem;
+  }
+
+  .info-box strong {
+    color: var(--primary);
+  }
+
+  .dependency-badge {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    display: inline-block;
+    margin: 0.25rem;
+  }
+
+  @media (max-width: 768px) {
+    .dependencias-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .container-fluid {
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+  <div class="page-header">
+    <h1><i class="fas fa-link"></i> Dependências</h1>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filter-container" id="filterContainer">
+    <div class="filter-header" onclick="toggleFilters()">
+      <h3><i class="fas fa-filter"></i> Filtros Avançados</h3>
+      <i class="fas fa-chevron-down filter-toggle-icon"></i>
+    </div>
+    <div class="filter-body">
+      <form method="GET" id="filterForm">
+        <div class="filters-grid">
+          <div class="filter-field">
+            <label class="filter-label">Item Principal</label>
+            <input type="text" name="principal" class="filter-input" placeholder="Buscar..." value="{{ request.GET.principal }}">
+          </div>
+          <div class="filter-field">
+            <label class="filter-label">Prioridade</label>
+            <select name="prioridade" class="filter-input filter-select">
+              <option value="">Todas</option>
+              <option value="Alta" {% if request.GET.prioridade == 'Alta' %}selected{% endif %}>Alta</option>
+              <option value="Média" {% if request.GET.prioridade == 'Média' %}selected{% endif %}>Média</option>
+              <option value="Baixa" {% if request.GET.prioridade == 'Baixa' %}selected{% endif %}>Baixa</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label class="filter-label">Criado Por</label>
+            <input type="text" name="criado_por" class="filter-input" placeholder="Usuário..." value="{{ request.GET.criado_por }}">
+          </div>
+        </div>
+        <div class="d-flex gap-2 justify-content-end">
+          <a href="{% url 'dependencias' %}" class="btn-clear">Limpar</a>
+          <button type="submit" class="btn-apply">Aplicar Filtros</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CARDS -->
+  {% if dependencias %}
+  <div class="dependencias-grid">
+    {% for dep in dependencias %}
+    <div class="dependencia-card">
+      <div class="card-header">
+        <div class="card-tipo"><i class="fas fa-database"></i> DEPENDÊNCIA</div>
+        <div class="card-actions">
+          <button class="btn-view" onclick="abrirDetalhes({{ dep.id }})" title="Ver Detalhes" data-bs-toggle="modal" data-bs-target="#detalhesModal{{ dep.id }}">
+            <i class="fas fa-eye"></i>
+          </button>
+          <a href="{% url 'dependencia_editar' dep.id %}" class="btn-edit" title="Editar">
+            <i class="fas fa-edit"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="card-body-item">
+        <span class="card-label">Item Principal</span>
+        <code class="code-snippet">{{ dep.principal_label }}</code>
+      </div>
+
+      <div class="card-body-item">
+        <span class="card-label">Total de Dependências</span>
+        <span class="card-value">
+          {% with count=dep.dependentes.count %}
+            {% if count > 0 %}
+              <strong>{{ count }}</strong> dependência(s)
+            {% else %}
+              <span class="text-muted">Nenhuma</span>
+            {% endif %}
+          {% endwith %}
+        </span>
+      </div>
+
+      <div class="card-body-item">
+        <span class="card-label">Prioridade</span>
+        <div style="margin-top: 0.5rem;">
+          {% if dep.idprioridade.nivel == 'Alta' %}
+            <span class="badge badge-alta">🔴 Alta</span>
+          {% elif dep.idprioridade.nivel == 'Média' %}
+            <span class="badge badge-media">🟡 Média</span>
+          {% elif dep.idprioridade.nivel == 'Baixa' %}
+            <span class="badge badge-baixa">🟢 Baixa</span>
+          {% else %}
+            <span class="text-muted">-</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card-body-item">
+        <span class="card-label">Criado Por</span>
+        <span class="card-value">{{ dep.criado_por|default:'-' }}</span>
+      </div>
+
+      <div class="card-body-item">
+        <span class="card-label">Data de Criação</span>
+        <span class="card-value">{{ dep.data_criacao|date:"d/m/Y"|default:'-' }}</span>
+      </div>
+    </div>
+
+    <!-- MODAL DETALHES -->
+    <div class="modal fade" id="detalhesModal{{ dep.id }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-info-circle"></i> Detalhes da Dependência</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Informações Principais -->
+            <div class="info-box">
+              <p><strong>Item Principal:</strong> {{ dep.principal_label }}</p>
+              <p><strong>Criado Por:</strong> {{ dep.criado_por|default:'-' }}</p>
+              <p class="mb-0"><strong>Data:</strong> {{ dep.data_criacao|date:"d/m/Y H:i"|default:'-' }}</p>
+            </div>
+
+            <!-- Prioridade -->
+            <div class="info-box">
+              <p class="mb-0"><strong>Prioridade:</strong>
+                {% if dep.idprioridade.nivel == 'Alta' %}
+                  <span class="badge badge-alta">🔴 Alta</span>
+                {% elif dep.idprioridade.nivel == 'Média' %}
+                  <span class="badge badge-media">🟡 Média</span>
+                {% elif dep.idprioridade.nivel == 'Baixa' %}
+                  <span class="badge badge-baixa">🟢 Baixa</span>
+                {% else %}
+                  <span class="text-muted">-</span>
+                {% endif %}
+              </p>
+            </div>
+
+            <!-- Observações -->
+            <div class="info-box">
+              <p><strong>Observações:</strong></p>
+              <div style="background: #1a1a1a; padding: 0.75rem; border-radius: 4px; min-height: 60px; max-height: 150px; overflow-y: auto;">
+                <span class="card-value" style="white-space: pre-wrap; line-height: 1.5;">{{ dep.observacoes|default:'Sem observações registradas' }}</span>
+              </div>
+            </div>
+
+            <!-- Dependências -->
+            <div class="info-box">
+              <p><strong>Dependências Cadastradas:</strong></p>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                {% with deps=dep.dependentes.all %}
+                  {% if deps %}
+                    {% for d in deps %}
+                      <span class="dependency-badge">
+                        <strong>{{ d.get_tipo_display|upper }}</strong> - {{ d.iddependente }}
+                      </span>
+                    {% endfor %}
+                  {% else %}
+                    <span class="text-muted"><i class="fas fa-info-circle"></i> Nenhuma dependência cadastrada</span>
+                  {% endif %}
+                {% endwith %}
+              </div>
+            </div>
+
+            <!-- Histórico -->
+            <div class="info-box">
+              <p><strong><i class="fas fa-history"></i> Histórico de Alterações</strong></p>
+              <div style="max-height: 300px; overflow-y: auto;">
+                {% with historico=dep.historico_alteracoes.all|slice:":5" %}
+                  {% if historico %}
+                    <div style="font-size: 0.85rem;">
+                      {% for h in historico %}
+                        <div style="padding: 0.5rem; border-bottom: 1px solid var(--border);">
+                          <strong>{{ h.data_alteracao|date:"d/m/Y H:i" }}</strong> - {{ h.usuario }}<br>
+                          <span class="text-muted">{{ h.descricao }}</span>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <span class="text-muted">Sem histórico de alterações</span>
+                  {% endif %}
+                {% endwith %}
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer" style="border-top: 1px solid var(--border);">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times"></i> Fechar
+            </button>
+            <a href="{% url 'dependencia_editar' dep.id %}" class="btn btn-primary">
+              <i class="fas fa-edit"></i> Editar
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-5">
+    <div style="font-size: 4rem; opacity: 0.3;">📭</div>
+    <h3 class="mt-3" style="color: #fff;">Nenhuma Dependência Encontrada</h3>
+    <p style="color: var(--light); opacity: 0.7;">
+      {% if request.GET %}
+        Nenhum resultado para os filtros aplicados. <br>
+        <a href="{% url 'dependencias' %}" style="color: var(--primary);">Limpar filtros</a>
+      {% else %}
+        Não há dependências cadastradas no sistema.
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+  function toggleFilters() {
+    document.getElementById('filterContainer').classList.toggle('collapsed');
+  }
+
+  function abrirDetalhes(id) {
+    console.log('Detalhes:', id);
+  }
+</script>
+{% endblock %}
